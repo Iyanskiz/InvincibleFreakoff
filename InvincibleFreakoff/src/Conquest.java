@@ -1,5 +1,7 @@
 import java.awt.*;
 
+
+//iyans ssh key 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
 public class Conquest extends Fighter {
 
     private int specialCooldown = 0;
