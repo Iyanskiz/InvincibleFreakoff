@@ -4,7 +4,7 @@ public class HealthBar {
 
     private int x, y, width, height;
     private boolean isPlayer1;
-    private float displayedHealth = 1.0f; // smooth animation
+    private float displayedHealth = 1.0f;
     private String fighterName;
 
     public HealthBar(int x, int y, int width, int height, boolean isPlayer1) {
@@ -21,7 +21,6 @@ public class HealthBar {
 
     public void update(int currentHealth, int maxHealth) {
         float target = (float) currentHealth / maxHealth;
-        // Smooth drain animation
         if (displayedHealth > target) {
             displayedHealth -= 0.015f;
             if (displayedHealth < target) displayedHealth = target;
@@ -35,15 +34,12 @@ public class HealthBar {
 
         float pct = displayedHealth;
 
-        // Background track
         g.setColor(new Color(20, 20, 20));
         g.fillRoundRect(x, y, width, height, height, height);
 
-        // Dark red "damage preview"
         g.setColor(new Color(100, 0, 0));
         g.fillRoundRect(x + 2, y + 2, width - 4, height - 4, height, height);
 
-        // Health fill color
         Color healthColor;
         if (pct > 0.6f)      healthColor = new Color(60, 200, 60);
         else if (pct > 0.3f) healthColor = new Color(220, 180, 0);
@@ -52,11 +48,9 @@ public class HealthBar {
         int fillW = (int)((width - 4) * pct);
         if (fillW < 0) fillW = 0;
 
-        // Fill (P2 fills right-to-left)
         if (isPlayer1) {
             g.setColor(healthColor);
             g.fillRoundRect(x + 2, y + 2, fillW, height - 4, height, height);
-            // Shine
             g.setColor(new Color(255, 255, 255, 40));
             g.fillRoundRect(x + 2, y + 2, fillW, (height - 4) / 2, height, height);
         } else {
@@ -66,13 +60,11 @@ public class HealthBar {
             g.fillRoundRect(x + 2 + (width - 4 - fillW), y + 2, fillW, (height - 4) / 2, height, height);
         }
 
-        // Border
         g.setColor(new Color(255, 255, 255, 80));
         g.setStroke(new BasicStroke(2));
         g.drawRoundRect(x, y, width, height, height, height);
         g.setStroke(new BasicStroke(1));
 
-        // HP text
         g.setFont(new Font("Arial", Font.BOLD, 11));
         String hpText = currentHealth + " / " + maxHealth;
         FontMetrics fm = g.getFontMetrics();
@@ -82,7 +74,6 @@ public class HealthBar {
         g.setColor(Color.WHITE);
         g.drawString(hpText, tx, y + height - 4);
 
-        // Fighter name
         if (fighterName != null) {
             g.setFont(new Font("Arial", Font.BOLD, 14));
             g.setColor(new Color(255, 220, 50));
