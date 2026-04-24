@@ -38,14 +38,16 @@ public abstract class Fighter {
     protected Color characterColor = Color.GRAY;
     protected Color accentColor    = Color.WHITE;
 
-    // Sprite images — subclasses populate these
     protected BufferedImage imgIdle;
     protected BufferedImage imgForward;
     protected BufferedImage imgBackward;
     protected BufferedImage imgPunch;
     protected BufferedImage imgBlock;
     protected BufferedImage imgHit;
-    protected BufferedImage imgLevitating; // used for jump
+    protected BufferedImage imgLevitating;
+
+    // track block key held separately
+    private boolean blockKeyHeld = false;
 
     public Fighter(String name, int health, int x, boolean isPlayer1) {
         this.name      = name;
@@ -57,10 +59,8 @@ public abstract class Fighter {
         this.facingRight = isPlayer1;
     }
 
-    /** Helper — loads an image from the imgs/ folder next to src */
     protected BufferedImage loadImage(String filename) {
         try {
-            // Try several common paths so it works in Eclipse and from jar
             String[] paths = {
                 "imgs/" + filename,
                 "src/imgs/" + filename,
@@ -76,6 +76,18 @@ public abstract class Fighter {
             System.err.println("Error loading image: " + filename + " — " + e.getMessage());
         }
         return null;
+    }
+
+    // Call this every frame with whether the block key is currently held
+    public void setBlockHeld(boolean held) {
+        blockKeyHeld = held;
+        if (held && !isAttacking && !isHurt) {
+            isBlocking   = true;
+            currentState = State.BLOCK;
+        } else if (!held) {
+            isBlocking = false;
+            if (currentState == State.BLOCK) currentState = State.IDLE;
+        }
     }
 
     public void update(Fighter opponent) {
@@ -96,12 +108,19 @@ public abstract class Fighter {
 
         if (opponent != null) facingRight = (opponent.x > this.x);
 
+        // Re-apply block state every frame if key is held
+        if (blockKeyHeld && !isAttacking && !isHurt) {
+            isBlocking   = true;
+            currentState = State.BLOCK;
+        }
+
         if (isAttacking) {
             attackTimer--;
             if (attackTimer <= 0) {
-                isAttacking   = false;
-                attackHitbox  = null;
-                currentState  = State.IDLE;
+                isAttacking  = false;
+                attackHitbox = null;
+                // Return to block if still holding, else idle
+                currentState = blockKeyHeld ? State.BLOCK : State.IDLE;
             }
         }
 
@@ -109,13 +128,15 @@ public abstract class Fighter {
             hurtTimer--;
             if (hurtTimer <= 0) {
                 isHurt       = false;
-                currentState = State.IDLE;
+                currentState = blockKeyHeld ? State.BLOCK : State.IDLE;
             }
         }
 
         if (onGround) velX *= 0.75f;
-        if (Math.abs(velX) < 0.5f && onGround && currentState == State.WALK_FORWARD) currentState = State.IDLE;
-        if (Math.abs(velX) < 0.5f && onGround && currentState == State.WALK_BACKWARD) currentState = State.IDLE;
+        if (Math.abs(velX) < 0.5f && onGround &&
+            (currentState == State.WALK_FORWARD || currentState == State.WALK_BACKWARD)) {
+            currentState = blockKeyHeld ? State.BLOCK : State.IDLE;
+        }
 
         animTimer++;
         if (animTimer >= animSpeed) { animTimer = 0; animFrame++; }
@@ -124,7 +145,7 @@ public abstract class Fighter {
     }
 
     public void lightAttack() {
-        if (!isAttacking && !isHurt) {
+        if (!isAttacking && !isHurt && !isBlocking) {
             isAttacking  = true;
             attackTimer  = 20;
             attackDamage = 8;
@@ -134,7 +155,7 @@ public abstract class Fighter {
     }
 
     public void heavyAttack() {
-        if (!isAttacking && !isHurt) {
+        if (!isAttacking && !isHurt && !isBlocking) {
             isAttacking  = true;
             attackTimer  = 30;
             attackDamage = 18;
@@ -144,7 +165,7 @@ public abstract class Fighter {
     }
 
     public void jump() {
-        if (onGround) {
+        if (onGround && !isBlocking) {
             velY     = JUMP_FORCE;
             onGround = false;
             currentState = State.JUMP;
@@ -152,30 +173,34 @@ public abstract class Fighter {
     }
 
     public void moveLeft() {
-        if (!isAttacking && !isHurt) {
+        if (!isAttacking && !isHurt && !isBlocking) {
             velX = -5;
             if (onGround) currentState = facingRight ? State.WALK_BACKWARD : State.WALK_FORWARD;
         }
     }
 
     public void moveRight() {
-        if (!isAttacking && !isHurt) {
+        if (!isAttacking && !isHurt && !isBlocking) {
             velX = 5;
             if (onGround) currentState = facingRight ? State.WALK_FORWARD : State.WALK_BACKWARD;
         }
     }
 
-    public void block() {
-        if (!isAttacking) { isBlocking = true; currentState = State.BLOCK; }
-    }
-
-    public void stopBlock() {
-        isBlocking = false;
-        if (currentState == State.BLOCK) currentState = State.IDLE;
-    }
+    // Keep old block/stopBlock for compatibility but setBlockHeld is preferred
+    public void block()     { setBlockHeld(true); }
+    public void stopBlock() { setBlockHeld(false); }
 
     public void takeDamage(int damage) {
-        if (isBlocking) damage = damage / 3;
+        if (isBlocking) {
+            damage = damage / 3;
+            // Don't go into hurt state when blocking — just flash
+            currentHealth -= damage;
+            if (currentHealth < 0) currentHealth = 0;
+            isHurt    = true;
+            hurtTimer = 6; // very short flash
+            // Stay in BLOCK state
+            return;
+        }
         currentHealth -= damage;
         if (currentHealth < 0) currentHealth = 0;
         isHurt       = true;
@@ -188,9 +213,9 @@ public abstract class Fighter {
 
     private void updateAttackHitbox() {
         if (isAttacking) {
-            int reach = (currentState == State.ATTACK_HEAVY) ? 110 : 80;
-            if (facingRight) attackHitbox = new Rectangle(x + width,       y + 20, reach, 80);
-            else             attackHitbox = new Rectangle(x - reach,        y + 20, reach, 80);
+            int reach = (currentState == State.ATTACK_HEAVY || currentState == State.SPECIAL) ? 110 : 80;
+            if (facingRight) attackHitbox = new Rectangle(x + width,  y + 20, reach, 80);
+            else             attackHitbox = new Rectangle(x - reach,   y + 20, reach, 80);
         } else {
             attackHitbox = null;
         }
@@ -200,7 +225,10 @@ public abstract class Fighter {
         return new Rectangle(x + 10, y, width - 20, height);
     }
 
-    /** Returns the correct image for the current state */
+    public BufferedImage getLevitatingImage() {
+        return imgLevitating;
+    }
+
     protected BufferedImage getCurrentImage() {
         switch (currentState) {
             case WALK_FORWARD:  return imgForward    != null ? imgForward    : imgIdle;
@@ -216,34 +244,37 @@ public abstract class Fighter {
     }
 
     public void draw(Graphics2D g) {
-        // Shadow
         g.setColor(new Color(0, 0, 0, 60));
         g.fillOval(x + 10, GROUND_Y + height - 5, width - 20, 14);
 
         BufferedImage img = getCurrentImage();
 
         if (img != null) {
-            // Hurt flash
             if (isHurt && hurtTimer % 4 < 2) {
-                // Draw with white tint by using AlphaComposite trick
                 Graphics2D g2 = (Graphics2D) g.create();
-                g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.6f));
+                g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.55f));
                 g2.setColor(Color.WHITE);
-                if (!facingRight) {
-                    g2.drawImage(img, x + width, y, -width, height, null);
-                } else {
-                    g2.drawImage(img, x, y, width, height, null);
-                }
+                if (!facingRight) g2.drawImage(img, x + width, y, -width, height, null);
+                else              g2.drawImage(img, x, y, width, height, null);
                 g2.dispose();
             } else {
-                if (!facingRight) {
-                    g.drawImage(img, x + width, y, -width, height, null);
-                } else {
-                    g.drawImage(img, x, y, width, height, null);
-                }
+                if (!facingRight) g.drawImage(img, x + width, y, -width, height, null);
+                else              g.drawImage(img, x, y, width, height, null);
+            }
+
+            // Blue shield flash when blocking
+            if (isBlocking) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.25f));
+                g2.setColor(new Color(80, 160, 255));
+                g2.fillRoundRect(x, y, width, height, 20, 20);
+                g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.7f));
+                g2.setColor(new Color(80, 160, 255));
+                g2.setStroke(new BasicStroke(3));
+                g2.drawRoundRect(x, y, width, height, 20, 20);
+                g2.dispose();
             }
         } else {
-            // Fallback shape if image missing
             g.setColor(characterColor);
             g.fillRoundRect(x + 10, y, width - 20, height, 10, 10);
             g.setColor(Color.WHITE);

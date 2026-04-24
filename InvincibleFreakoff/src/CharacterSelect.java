@@ -18,23 +18,23 @@ public class CharacterSelect extends JPanel implements KeyListener, ActionListen
     private int tick = 0;
     private JFrame parentFrame;
 
-    private final String[] names     = {"INVINCIBLE", "OMNI-MAN", "THRAGG", "CONQUEST"};
-    private final String[] subtitles = {"Mark Grayson", "Nolan Grayson", "Grand Regent", "The Conqueror"};
+    private final String[] names     = {"MUT. INVINCIBLE", "OMNI-MAN", "THRAGG", "CONQUEST"};
+    private final String[] subtitles = {"Mutated Mark Grayson", "Nolan Grayson", "Grand Regent", "The Conqueror"};
     private final Color[]  colors    = {
-        new Color(30, 90, 255),
+        new Color(20, 160, 80),
         new Color(180, 0, 0),
         new Color(100, 0, 0),
         new Color(60, 60, 80)
     };
     private final Color[] accents = {
-        new Color(255, 220, 0),
+        new Color(180, 255, 120),
         new Color(240, 240, 240),
         new Color(180, 140, 0),
         new Color(200, 50, 50)
     };
-    private final int[] statPower  = {80, 90, 95, 88};
-    private final int[] statSpeed  = {90, 85, 70, 75};
-    private final int[] statHealth = {75, 90, 95, 88};
+    private final int[] statPower  = {100, 90, 95, 88};
+    private final int[] statSpeed  = {95, 85, 70, 75};
+    private final int[] statHealth = {100, 90, 95, 88};
 
     // Levitating preview images per character
     private BufferedImage[] previewImages = new BufferedImage[4];
@@ -54,7 +54,7 @@ public class CharacterSelect extends JPanel implements KeyListener, ActionListen
     private void loadPreviewImages() {
         // Index matches: 0=Invincible, 1=OmniMan, 2=Thragg, 3=Conquest
         String[] filenames = {
-            null,                        // Invincible — no image yet, will draw shape
+            "InvincibleLevitating.png",  // Invincible
             "OmniLevitating.png",        // OmniMan
             "ThaggLevitating.png",       // Thragg  (check exact filename spelling)
             "ConquestLevitating.png"     // Conquest
