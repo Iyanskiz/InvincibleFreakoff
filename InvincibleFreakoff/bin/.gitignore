@@ -12,3 +12,11 @@
 /Thragg.class
 /imgs/
 /pat.txt
+/GamePanel$LightningBolt.class
+/GamePanel$Meteor.class
+/GamePanel$Particle.class
+/GamePanel$ScreenFlash.class
+/GamePanel$Shockwave.class
+/GamePanel$SpaceDebris.class
+/GamePanel$BuildingPiece.class
+/GamePanel$EnergyOrb.class
