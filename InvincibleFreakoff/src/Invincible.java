@@ -11,20 +11,20 @@ public class Invincible extends Fighter {
     private int flurryTimer = 0;
 
     public Invincible(int x, boolean isPlayer1) {
-        super("Mut. Invincible", 200, x, isPlayer1);
+        super("Invincible", 350, x, isPlayer1);
         characterColor = new Color(20, 160, 80);
         accentColor    = new Color(180, 255, 120);
         attackDamage   = 20;
         animSpeed      = 4;
-        width  = 130;
-        height = 160;
+        width  = 150;
+        height = 185;
 
         imgIdle       = loadImage("InvincibleIdle.png");
         imgForward    = loadImage("InvincibleForward.png");
         imgBackward   = loadImage("InvincibleBackward.png");
         imgPunch      = loadImage("InvinciblePunch.png");
         imgBlock      = loadImage("InvincibleBlock.png");
-        imgHit        = loadImage("InvincibleIdle.png");
+        imgHit        = loadImage("InvincibleHit.png");
         imgLevitating = loadImage("InvincibleLevitating.png");
     }
 

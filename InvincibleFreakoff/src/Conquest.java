@@ -8,13 +8,13 @@ public class Conquest extends Fighter {
     private int blastX = 0, blastY = 0;
 
     public Conquest(int x, boolean isPlayer1) {
-        super("Conquest", 170, x, isPlayer1);
+        super("Conquest", 310, x, isPlayer1);
         characterColor = new Color(60, 60, 80);
         accentColor    = new Color(200, 50, 50);
         attackDamage   = 15;
         animSpeed      = 6;
-        width  = 140;
-        height = 170;
+        width  = 150;
+        height = 185;
 
         imgIdle       = loadImage("ConquestIdle.png");
         imgForward    = loadImage("ConquestForward.png");

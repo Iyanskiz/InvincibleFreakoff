@@ -7,13 +7,13 @@ public class OmniMan extends Fighter {
     private int chargeTimer = 0;
 
     public OmniMan(int x, boolean isPlayer1) {
-        super("Omni-Man", 160, x, isPlayer1);
+        super("Omni-Man", 300, x, isPlayer1);
         characterColor = new Color(180, 0, 0);
         accentColor    = new Color(240, 240, 240);
         attackDamage   = 14;
         animSpeed      = 6;
-        width  = 125;
-        height = 150;
+        width  = 150;
+        height = 185;
 
         imgIdle       = loadImage("OmniLevitating.png");
         imgForward    = loadImage("OmniForward.png");

@@ -11,7 +11,7 @@ public abstract class Fighter {
 
     public float velX = 0, velY = 0;
     public boolean onGround = true;
-    public static final int GROUND_Y = 430;
+    public static final int GROUND_Y = 500;
     public static final float GRAVITY = 0.8f;
     public static final float JUMP_FORCE = -18f;
 
@@ -46,39 +46,32 @@ public abstract class Fighter {
     protected BufferedImage imgHit;
     protected BufferedImage imgLevitating;
 
-    // track block key held separately
     private boolean blockKeyHeld = false;
 
     public Fighter(String name, int health, int x, boolean isPlayer1) {
-        this.name      = name;
-        this.maxHealth = health;
+        this.name          = name;
+        this.maxHealth     = health;
         this.currentHealth = health;
-        this.x         = x;
-        this.y         = GROUND_Y;
-        this.isPlayer1 = isPlayer1;
-        this.facingRight = isPlayer1;
+        this.x             = x;
+        this.y             = GROUND_Y;
+        this.isPlayer1     = isPlayer1;
+        this.facingRight   = isPlayer1;
     }
 
     protected BufferedImage loadImage(String filename) {
         try {
-            String[] paths = {
-                "imgs/" + filename,
-                "src/imgs/" + filename,
-                "../imgs/" + filename,
-                filename
-            };
+            String[] paths = { "imgs/" + filename, "src/imgs/" + filename, "../imgs/" + filename, filename };
             for (String path : paths) {
                 File f = new File(path);
                 if (f.exists()) return ImageIO.read(f);
             }
             System.err.println("Image not found: " + filename);
         } catch (IOException e) {
-            System.err.println("Error loading image: " + filename + " — " + e.getMessage());
+            System.err.println("Error loading: " + filename);
         }
         return null;
     }
 
-    // Call this every frame with whether the block key is currently held
     public void setBlockHeld(boolean held) {
         blockKeyHeld = held;
         if (held && !isAttacking && !isHurt) {
@@ -92,23 +85,21 @@ public abstract class Fighter {
 
     public void update(Fighter opponent) {
         if (!onGround) velY += GRAVITY;
-
         x += velX;
-        y += velY;
+        y += (int)velY;
 
         if (y >= GROUND_Y) {
-            y = GROUND_Y;
+            y    = GROUND_Y;
             velY = 0;
             onGround = true;
             if (currentState == State.JUMP) currentState = State.IDLE;
         }
 
         if (x < 0) x = 0;
-        if (x > 1100 - width) x = 1100 - width;
+        if (x > 1200 - width) x = 1200 - width;
 
         if (opponent != null) facingRight = (opponent.x > this.x);
 
-        // Re-apply block state every frame if key is held
         if (blockKeyHeld && !isAttacking && !isHurt) {
             isBlocking   = true;
             currentState = State.BLOCK;
@@ -119,7 +110,6 @@ public abstract class Fighter {
             if (attackTimer <= 0) {
                 isAttacking  = false;
                 attackHitbox = null;
-                // Return to block if still holding, else idle
                 currentState = blockKeyHeld ? State.BLOCK : State.IDLE;
             }
         }
@@ -140,7 +130,6 @@ public abstract class Fighter {
 
         animTimer++;
         if (animTimer >= animSpeed) { animTimer = 0; animFrame++; }
-
         updateAttackHitbox();
     }
 
@@ -186,19 +175,16 @@ public abstract class Fighter {
         }
     }
 
-    // Keep old block/stopBlock for compatibility but setBlockHeld is preferred
-    public void block()     { setBlockHeld(true); }
+    public void block()     { setBlockHeld(true);  }
     public void stopBlock() { setBlockHeld(false); }
 
     public void takeDamage(int damage) {
         if (isBlocking) {
             damage = damage / 3;
-            // Don't go into hurt state when blocking — just flash
             currentHealth -= damage;
             if (currentHealth < 0) currentHealth = 0;
             isHurt    = true;
-            hurtTimer = 6; // very short flash
-            // Stay in BLOCK state
+            hurtTimer = 6;
             return;
         }
         currentHealth -= damage;
@@ -225,9 +211,7 @@ public abstract class Fighter {
         return new Rectangle(x + 10, y, width - 20, height);
     }
 
-    public BufferedImage getLevitatingImage() {
-        return imgLevitating;
-    }
+    public BufferedImage getLevitatingImage() { return imgLevitating; }
 
     protected BufferedImage getCurrentImage() {
         switch (currentState) {
@@ -244,11 +228,11 @@ public abstract class Fighter {
     }
 
     public void draw(Graphics2D g) {
+        // Shadow
         g.setColor(new Color(0, 0, 0, 60));
         g.fillOval(x + 10, GROUND_Y + height - 5, width - 20, 14);
 
         BufferedImage img = getCurrentImage();
-
         if (img != null) {
             if (isHurt && hurtTimer % 4 < 2) {
                 Graphics2D g2 = (Graphics2D) g.create();
@@ -261,8 +245,6 @@ public abstract class Fighter {
                 if (!facingRight) g.drawImage(img, x + width, y, -width, height, null);
                 else              g.drawImage(img, x, y, width, height, null);
             }
-
-            // Blue shield flash when blocking
             if (isBlocking) {
                 Graphics2D g2 = (Graphics2D) g.create();
                 g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.25f));

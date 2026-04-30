@@ -3,20 +3,21 @@ import java.awt.*;
 
 public class Frame extends JFrame {
 
+    public static final int WIDTH  = 1280;
+    public static final int HEIGHT = 720;
+
     public Frame() {
-        setTitle("Invincible Freakoff");
+        setTitle("Invincible Showdown");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setResizable(false);
 
-        // Start with character select screen
-        CharacterSelect charSelect = new CharacterSelect(this);
-        setContentPane(charSelect);
+        MainMenu menu = new MainMenu(this);
+        setContentPane(menu);
 
         pack();
         setLocationRelativeTo(null);
         setVisible(true);
-
-        charSelect.requestFocusInWindow();
+        menu.requestFocusInWindow();
     }
 
     public static void main(String[] args) {

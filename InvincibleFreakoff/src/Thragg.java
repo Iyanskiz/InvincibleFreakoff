@@ -7,13 +7,13 @@ public class Thragg extends Fighter {
     private int graxTimer = 0;
 
     public Thragg(int x, boolean isPlayer1) {
-        super("Thragg", 180, x, isPlayer1);
+        super("Thragg", 320, x, isPlayer1);
         characterColor = new Color(100, 0, 0);
         accentColor    = new Color(180, 140, 0);
         attackDamage   = 16;
         animSpeed      = 7;
-        width  = 160;
-        height = 190;
+        width  = 150;
+        height = 185;
 
         imgIdle       = loadImage("ThraggIdle.png");
         imgForward    = loadImage("ThraggForward.png");
