@@ -4,97 +4,75 @@ import java.awt.image.BufferedImage;
 public class Invincible extends Fighter {
 
     private int specialCooldown = 0;
-    private boolean rageActive = false;
-    private int rageTimer = 0;
-    // Flurry combo tracking
-    private int flurryCount = 0;
-    private int flurryTimer = 0;
+    private boolean flyingThrough = false;
+    private int flyTimer = 0;
 
     public Invincible(int x, boolean isPlayer1) {
-        super("Invincible", 350, x, isPlayer1);
-        characterColor = new Color(20, 160, 80);
-        accentColor    = new Color(180, 255, 120);
-        attackDamage   = 20;
-        animSpeed      = 4;
-        width  = 150;
-        height = 185;
+        super("Invincible", 180, x, isPlayer1);
+        characterColor = new Color(30, 90, 255);
+        accentColor    = new Color(255, 220, 0);
+        attackDamage   = 10;
+        animSpeed      = 5;
+        width  = 130;
+        height = 160;
 
         imgIdle       = loadImage("InvincibleIdle.png");
         imgForward    = loadImage("InvincibleForward.png");
         imgBackward   = loadImage("InvincibleBackward.png");
         imgPunch      = loadImage("InvinciblePunch.png");
         imgBlock      = loadImage("InvincibleBlock.png");
-        imgHit        = loadImage("InvincibleHit.png");
+        imgHit        = loadImage("InvincibleIdle.png");
         imgLevitating = loadImage("InvincibleLevitating.png");
     }
 
     @Override
     public void update(Fighter opponent) {
         if (specialCooldown > 0) specialCooldown--;
-        if (flurryTimer > 0) flurryTimer--;
-        if (rageActive) {
-            rageTimer--;
-            if (rageTimer <= 0) {
-                rageActive   = false;
-                attackDamage = 20;
-            }
+        if (flyingThrough) {
+            flyTimer--;
+            if (flyTimer <= 0) flyingThrough = false;
         }
         super.update(opponent);
     }
 
     @Override
     public void specialMove() {
-        // LORE: Invincible's signature is an ULTRA FLURRY of punches at superhuman speed
-        // He flies at the opponent and unleashes a barrage — like his fight vs Omni-Man
+        // LORE: Invincible's signature — the AERIAL SLAM
+        // He rockets straight up then dive-bombs the opponent
+        // like his classic move against Conquest and Omni-Man
         if (specialCooldown == 0 && !isAttacking) {
-            rageActive      = true;
-            rageTimer       = 180;
-            specialCooldown = 200;
+            flyingThrough   = true;
+            flyTimer        = 40;
+            specialCooldown = 160;
             isAttacking     = true;
-            attackTimer     = 60;   // long attack — full flurry
-            attackDamage    = 8;    // each hit is moderate but hits MANY times
-            flurryCount     = 6;    // 6 rapid hits
-            flurryTimer     = 60;
+            attackTimer     = 40;
+            attackDamage    = 28;
             currentState    = State.SPECIAL;
-            // Fly straight at opponent fast
-            velX = facingRight ? 18 : -18;
-            velY = -4;
+            // Rocket upward then forward
+            velY = -20;
+            velX = facingRight ? 12 : -12;
         }
-    }
-
-    // Called from GamePanel to do multi-hit flurry
-    public boolean doFlurryHit() {
-        if (flurryCount > 0 && flurryTimer > 0 && (flurryTimer % 10 == 0)) {
-            flurryCount--;
-            return true;
-        }
-        return false;
-    }
-
-    @Override
-    public void takeDamage(int damage) {
-        damage = (int)(damage * 0.75f); // mutant durability
-        super.takeDamage(damage);
     }
 
     @Override
     public void draw(Graphics2D g) {
-        if (rageActive) {
-            g.setColor(new Color(80, 255, 120, 55));
-            g.fillOval(x - 20, y - 20, width + 40, height + 40);
-            g.setColor(new Color(120, 255, 80, 25));
-            g.fillOval(x - 35, y - 35, width + 70, height + 70);
+        // Blue speed trail when doing special
+        if (flyingThrough) {
+            g.setColor(new Color(50, 120, 255, 45));
+            g.fillOval(x - 15, y - 15, width + 30, height + 30);
+            g.setColor(new Color(255, 220, 50, 22));
+            g.fillOval(x - 28, y - 28, width + 56, height + 56);
         }
         super.draw(g);
         if (specialCooldown > 0) {
-            g.setColor(new Color(80, 255, 120, 140));
-            float pct = 1f - (specialCooldown / 200f);
+            g.setColor(new Color(50, 120, 255, 135));
+            float pct = 1f - (specialCooldown / 160f);
             g.fillArc(x + width/2 - 15, y - 22, 30, 14, 90, (int)(360 * pct));
         }
-        if (rageActive) {
+        if (flyingThrough) {
             g.setFont(new Font("Impact", Font.PLAIN, 13));
-            g.setColor(new Color(80, 255, 80, 200));
-            g.drawString("FLURRY!", x + width/2 - 25, y - 26);
+            g.setColor(new Color(100, 180, 255, 215));
+            g.drawString("AERIAL SLAM!", x + width/2 - 42, y - 26);
         }
     }
 }

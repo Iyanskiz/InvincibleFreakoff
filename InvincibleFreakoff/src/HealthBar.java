@@ -59,7 +59,6 @@ public class HealthBar {
             g.setColor(new Color(255, 255, 255, 40));
             g.fillRoundRect(x + 2 + (width - 4 - fillW), y + 2, fillW, (height - 4) / 2, height, height);
         }
-
         g.setColor(new Color(255, 255, 255, 80));
         g.setStroke(new BasicStroke(2));
         g.drawRoundRect(x, y, width, height, height, height);

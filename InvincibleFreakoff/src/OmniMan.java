@@ -12,8 +12,8 @@ public class OmniMan extends Fighter {
         accentColor    = new Color(240, 240, 240);
         attackDamage   = 14;
         animSpeed      = 6;
-        width  = 150;
-        height = 185;
+        width  = 125;
+        height = 150;
 
         imgIdle       = loadImage("OmniLevitating.png");
         imgForward    = loadImage("OmniForward.png");

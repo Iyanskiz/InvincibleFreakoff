@@ -12,8 +12,8 @@ public class Thragg extends Fighter {
         accentColor    = new Color(180, 140, 0);
         attackDamage   = 16;
         animSpeed      = 7;
-        width  = 150;
-        height = 185;
+        width  = 160;
+        height = 190;
 
         imgIdle       = loadImage("ThraggIdle.png");
         imgForward    = loadImage("ThraggForward.png");

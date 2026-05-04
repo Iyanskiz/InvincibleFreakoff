@@ -13,8 +13,8 @@ public class Conquest extends Fighter {
         accentColor    = new Color(200, 50, 50);
         attackDamage   = 15;
         animSpeed      = 6;
-        width  = 150;
-        height = 185;
+        width  = 140;
+        height = 170;
 
         imgIdle       = loadImage("ConquestIdle.png");
         imgForward    = loadImage("ConquestForward.png");

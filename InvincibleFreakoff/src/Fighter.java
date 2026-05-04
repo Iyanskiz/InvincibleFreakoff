@@ -199,16 +199,18 @@ public abstract class Fighter {
 
     private void updateAttackHitbox() {
         if (isAttacking) {
-            int reach = (currentState == State.ATTACK_HEAVY || currentState == State.SPECIAL) ? 110 : 80;
-            if (facingRight) attackHitbox = new Rectangle(x + width,  y + 20, reach, 80);
-            else             attackHitbox = new Rectangle(x - reach,   y + 20, reach, 80);
+            int reach = (currentState == State.ATTACK_HEAVY || currentState == State.SPECIAL) ? 58 : 42;
+            int hitH  = 42;
+            int hitY  = y + height/2 - hitH/2;
+            if (facingRight) attackHitbox = new Rectangle(x + width - 15, hitY, reach, hitH);
+            else             attackHitbox = new Rectangle(x - reach + 15,  hitY, reach, hitH);
         } else {
             attackHitbox = null;
         }
     }
 
     public Rectangle getHurtbox() {
-        return new Rectangle(x + 10, y, width - 20, height);
+        return new Rectangle(x + 28, y + 18, width - 56, height - 30);
     }
 
     public BufferedImage getLevitatingImage() { return imgLevitating; }
