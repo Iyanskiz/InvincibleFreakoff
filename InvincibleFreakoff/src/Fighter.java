@@ -3,6 +3,7 @@ import java.awt.image.BufferedImage;
 import javax.imageio.ImageIO;
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
 
 public abstract class Fighter {
 
@@ -11,9 +12,10 @@ public abstract class Fighter {
 
     public float velX = 0, velY = 0;
     public boolean onGround = true;
-    public static final int GROUND_Y = 500;
-    public static final float GRAVITY = 0.8f;
-    public static final float JUMP_FORCE = -18f;
+    public static final int GROUND_Y  = 620;   // lower floor — more vertical space
+    public static final int WORLD_W   = 1600;  // wider arena
+    public static final float GRAVITY    = 0.9f;
+    public static final float JUMP_FORCE = -20f;
 
     public int maxHealth;
     public int currentHealth;
@@ -28,6 +30,10 @@ public abstract class Fighter {
     public int hurtTimer    = 0;
     public int attackDamage = 10;
     public Rectangle attackHitbox = null;
+
+    // Platform drop-through
+    public boolean dropThrough = false;
+    public int     dropTimer   = 0;
 
     public enum State { IDLE, WALK_FORWARD, WALK_BACKWARD, JUMP, ATTACK_LIGHT, ATTACK_HEAVY, HURT, DEAD, BLOCK, SPECIAL }
     public State currentState = State.IDLE;
@@ -83,33 +89,49 @@ public abstract class Fighter {
         }
     }
 
-    public void update(Fighter opponent) {
+    /** Full update with platform list */
+    public void update(Fighter opponent, List<Platform> platforms) {
+        if (dropTimer > 0) { dropThrough = true; dropTimer--; }
+        else dropThrough = false;
+
         if (!onGround) velY += GRAVITY;
-        x += velX;
+        x += (int)velX;
         y += (int)velY;
 
+        // Main floor
         if (y >= GROUND_Y) {
-            y    = GROUND_Y;
-            velY = 0;
-            onGround = true;
+            y = GROUND_Y; velY = 0; onGround = true;
             if (currentState == State.JUMP) currentState = State.IDLE;
         }
 
-        if (x < 0) x = 0;
-        if (x > 1200 - width) x = 1200 - width;
+        // Platform collision (one-way top)
+        if (!dropThrough && velY >= 0) {
+            for (Platform p : platforms) {
+                int feetY    = y + height;
+                int prevFeet = feetY - (int)velY;
+                if (prevFeet <= p.y && feetY >= p.y
+                        && x + width - 20 > p.x
+                        && x + 20 < p.x + p.w) {
+                    y = p.y - height; velY = 0; onGround = true;
+                    if (currentState == State.JUMP) currentState = State.IDLE;
+                    break;
+                }
+            }
+        }
+
+        if (x < 0)               x = 0;
+        if (x > WORLD_W - width) x = WORLD_W - width;
 
         if (opponent != null) facingRight = (opponent.x > this.x);
 
         if (blockKeyHeld && !isAttacking && !isHurt) {
-            isBlocking   = true;
-            currentState = State.BLOCK;
+            isBlocking = true; currentState = State.BLOCK;
         }
 
         if (isAttacking) {
             attackTimer--;
             if (attackTimer <= 0) {
-                isAttacking  = false;
-                attackHitbox = null;
+                isAttacking = false; attackHitbox = null;
                 currentState = blockKeyHeld ? State.BLOCK : State.IDLE;
             }
         }
@@ -117,7 +139,7 @@ public abstract class Fighter {
         if (isHurt) {
             hurtTimer--;
             if (hurtTimer <= 0) {
-                isHurt       = false;
+                isHurt = false;
                 currentState = blockKeyHeld ? State.BLOCK : State.IDLE;
             }
         }
@@ -133,31 +155,36 @@ public abstract class Fighter {
         updateAttackHitbox();
     }
 
+    /** Legacy no-platform update */
+    public void update(Fighter opponent) {
+        update(opponent, java.util.Collections.emptyList());
+    }
+
     public void lightAttack() {
         if (!isAttacking && !isHurt && !isBlocking) {
-            isAttacking  = true;
-            attackTimer  = 20;
-            attackDamage = 8;
-            currentState = State.ATTACK_LIGHT;
-            animFrame    = 0;
+            isAttacking = true; attackTimer = 20; attackDamage = 8;
+            currentState = State.ATTACK_LIGHT; animFrame = 0;
         }
     }
 
     public void heavyAttack() {
         if (!isAttacking && !isHurt && !isBlocking) {
-            isAttacking  = true;
-            attackTimer  = 30;
-            attackDamage = 18;
-            currentState = State.ATTACK_HEAVY;
-            animFrame    = 0;
+            isAttacking = true; attackTimer = 30; attackDamage = 18;
+            currentState = State.ATTACK_HEAVY; animFrame = 0;
         }
     }
 
     public void jump() {
         if (onGround && !isBlocking) {
-            velY     = JUMP_FORCE;
-            onGround = false;
-            currentState = State.JUMP;
+            velY = JUMP_FORCE; onGround = false; currentState = State.JUMP;
+        }
+    }
+
+    /** Drop through platform (DOWN + JUMP) */
+    public void dropDown() {
+        if (onGround) {
+            dropThrough = true; dropTimer = 18;
+            onGround = false; velY = 3f;
         }
     }
 
@@ -183,14 +210,12 @@ public abstract class Fighter {
             damage = damage / 3;
             currentHealth -= damage;
             if (currentHealth < 0) currentHealth = 0;
-            isHurt    = true;
-            hurtTimer = 6;
+            isHurt = true; hurtTimer = 6;
             return;
         }
         currentHealth -= damage;
         if (currentHealth < 0) currentHealth = 0;
-        isHurt       = true;
-        hurtTimer    = 15;
+        isHurt = true; hurtTimer = 15;
         currentState = State.HURT;
         velX = facingRight ? -4 : 4;
     }
@@ -230,9 +255,8 @@ public abstract class Fighter {
     }
 
     public void draw(Graphics2D g) {
-        // Shadow
         g.setColor(new Color(0, 0, 0, 60));
-        g.fillOval(x + 10, GROUND_Y + height - 5, width - 20, 14);
+        g.fillOval(x + 10, y + height, width - 20, 10);
 
         BufferedImage img = getCurrentImage();
         if (img != null) {

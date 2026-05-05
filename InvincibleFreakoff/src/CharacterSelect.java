@@ -59,7 +59,7 @@ public class CharacterSelect extends JPanel implements KeyListener, ActionListen
         botConfirmed = new boolean[slots];
         // Bot modes start at difficulty phase
         phase = (gameMode==2||gameMode==3) ? 0 : 1;
-        setPreferredSize(new Dimension(1280,720));
+        setPreferredSize(new Dimension(1600,800));
         setFocusable(true);
         addKeyListener(this);
         loadPreviews();

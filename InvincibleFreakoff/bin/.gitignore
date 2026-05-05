@@ -12,3 +12,5 @@
 /GamePanel$ScreenFlash.class
 /GamePanel$Shockwave.class
 /GamePanel$SpaceDebris.class
+/Platform.class
+/Platform$PlatformStyle.class

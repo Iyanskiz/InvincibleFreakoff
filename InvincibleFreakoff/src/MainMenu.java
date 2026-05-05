@@ -34,18 +34,18 @@ public class MainMenu extends JPanel implements ActionListener, KeyListener {
 
     public MainMenu(JFrame frame) {
         this.parentFrame = frame;
-        setPreferredSize(new Dimension(1280, 720));
+        setPreferredSize(new Dimension(1600, 800));
         setFocusable(true);
         addKeyListener(this);
         for (int i = 0; i < 220; i++)
-            stars.add(new float[]{rand.nextInt(1280), rand.nextInt(720), rand.nextFloat()*2+0.5f});
+            stars.add(new float[]{rand.nextInt(1600), rand.nextInt(800), rand.nextFloat()*2+0.5f});
         animTimer = new javax.swing.Timer(16, this);
         animTimer.start();
     }
 
     @Override public void actionPerformed(ActionEvent e) {
         tick++;
-        if (tick % 6 == 0) particles.add(new MenuParticle(rand.nextInt(1280), 730));
+        if (tick % 6 == 0) particles.add(new MenuParticle(rand.nextInt(1600), 730));
         particles.removeIf(p -> p.y < -20 || p.life <= 0);
         for (MenuParticle p : particles) p.update();
         repaint();
@@ -83,9 +83,9 @@ public class MainMenu extends JPanel implements ActionListener, KeyListener {
         // City silhouette
         g.setColor(new Color(5,4,10));
         int[] bx={0,0,80,80,140,140,210,210,280,280,350,350,420,420,500,500,580,580,650,650,
-                  720,720,800,800,870,870,940,940,1010,1010,1080,1080,1150,1150,1220,1220,1280,1280};
+                  720,720,800,800,870,870,940,940,1010,1010,1080,1080,1150,1150,1220,1220,1300,1300,1380,1380,1460,1460,1540,1540,1600,1600};
         int[] by={H,590,590,558,558,578,578,545,545,570,570,540,540,563,563,535,535,558,558,532,
-                  532,555,555,528,528,552,552,538,538,562,562,533,533,555,555,540,540,H};
+                  532,555,555,528,528,552,552,538,538,562,562,533,533,555,555,540,540,558,558,530,530,550,550,535,535,H};
         g.fillPolygon(bx,by,bx.length);
         GradientPaint hor=new GradientPaint(0,520,new Color(180,40,0,35),0,600,new Color(0,0,0,0));
         g.setPaint(hor); g.fillRect(0,520,W,80);

@@ -3,8 +3,8 @@ import java.awt.*;
 
 public class Frame extends JFrame {
 
-    public static final int WIDTH  = 1280;
-    public static final int HEIGHT = 720;
+    public static final int WIDTH  = 1600;
+    public static final int HEIGHT = 800;
 
     public Frame() {
         setTitle("Invincible Showdown");
