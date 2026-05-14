@@ -32,13 +32,13 @@ public class CharacterSelect extends JPanel implements KeyListener, ActionListen
     private int tick=0;
     private JFrame parentFrame;
 
-    private static final String[] NAMES     = {"INVINCIBLE","OMNI-MAN","THRAGG","CONQUEST"};
-    private static final String[] SUBTITLES = {"Mark Grayson","Nolan Grayson","Grand Regent","The Conqueror"};
-    private static final Color[]  COLORS    = {new Color(20,160,80),new Color(180,0,0),new Color(100,0,0),new Color(60,60,80)};
-    private static final Color[]  ACCENTS   = {new Color(180,255,120),new Color(240,240,240),new Color(180,140,0),new Color(200,50,50)};
-    private static final int[]    STAT_PWR  = {100,90,95,88};
-    private static final int[]    STAT_SPD  = {95,85,70,75};
-    private static final int[]    STAT_HP   = {100,90,95,88};
+    private static final String[] NAMES     = {"INVINCIBLE","OMNI-MAN","THRAGG","CONQUEST","ANISSA"};
+    private static final String[] SUBTITLES = {"Mark Grayson","Nolan Grayson","Grand Regent","The Conqueror","Viltrumite Warrior"};
+    private static final Color[]  COLORS    = {new Color(20,160,80),new Color(180,0,0),new Color(100,0,0),new Color(60,60,80),new Color(140,30,180)};
+    private static final Color[]  ACCENTS   = {new Color(180,255,120),new Color(240,240,240),new Color(180,140,0),new Color(200,50,50),new Color(220,180,255)};
+    private static final int[]    STAT_PWR  = {100,90,95,88,92};
+    private static final int[]    STAT_SPD  = {95,85,70,75,82};
+    private static final int[]    STAT_HP   = {100,90,95,88,85};
     private static final String[] DIFF_NAMES  = {"EASY","MEDIUM","HARD","NIGHTMARE"};
     private static final Color[]  DIFF_COLORS = {new Color(80,200,80),new Color(255,200,50),new Color(255,100,50),new Color(200,0,255)};
     private static final String[] DIFF_DESC   = {
@@ -48,7 +48,7 @@ public class CharacterSelect extends JPanel implements KeyListener, ActionListen
         "Relentless — near-perfect reactions"
     };
 
-    private BufferedImage[] previewImages = new BufferedImage[4];
+    private BufferedImage[] previewImages = new BufferedImage[5];
 
     public CharacterSelect(JFrame frame, int gameMode) {
         this.parentFrame = frame;
@@ -59,7 +59,7 @@ public class CharacterSelect extends JPanel implements KeyListener, ActionListen
         botConfirmed = new boolean[slots];
         // Bot modes start at difficulty phase
         phase = (gameMode==2||gameMode==3) ? 0 : 1;
-        setPreferredSize(new Dimension(1600,800));
+        // Size set by Frame
         setFocusable(true);
         addKeyListener(this);
         loadPreviews();
@@ -68,7 +68,7 @@ public class CharacterSelect extends JPanel implements KeyListener, ActionListen
     }
 
     private void loadPreviews(){
-        String[] files={"InvincibleLevitating.png","OmniLevitating.png","ThaggLevitating.png","ConquestLevitating.png"};
+        String[] files={"InvincibleLevitating.png","OmniLevitating.png","ThaggLevitating.png","ConquestLevitating.png","AnissaLevitating.png"};
         String[] paths={"imgs/","src/imgs/","../imgs/",""};
         for(int i=0;i<files.length;i++) for(String b:paths){
             File f=new File(b+files[i]);
@@ -155,7 +155,7 @@ public class CharacterSelect extends JPanel implements KeyListener, ActionListen
         } else {g.setColor(new Color(55,55,75,180)); g.setStroke(new BasicStroke(1.5f));}
         g.drawRoundRect(cx,cy,cw,ch,14,14); g.setStroke(new BasicStroke(1));
         // Skull / icon per difficulty
-        String[] icons={"😊","⚔","🔥","💀"};
+        String[] icons={"😊","⚔","🔥","💀","👊"};
         g.setFont(new Font("Segoe UI Emoji",Font.PLAIN,sel?32:26));
         FontMetrics fm=g.getFontMetrics();
         g.setColor(col); g.drawString(icons[index],cx+(cw-fm.stringWidth(icons[index]))/2,cy+46);
@@ -177,8 +177,8 @@ public class CharacterSelect extends JPanel implements KeyListener, ActionListen
         String hdr="SELECT BOT CHARACTER"+(slots>1?"S":"");
         g.drawString(hdr,W/2-fm.stringWidth(hdr)/2,y+22);
 
-        int cw=200,ch=90,gap=16,totalW=4*cw+3*gap,sx=(W-totalW)/2;
-        for(int i=0;i<4;i++){
+        int cw=180,ch=90,gap=14,totalW=5*cw+4*gap,sx=(W-totalW)/2;
+        for(int i=0;i<5;i++){
             int cx=sx+i*(cw+gap),cy=y+30;
             boolean sel=(botCursor==i);
             boolean conf0=(slots>=1&&botSelections[0]==i&&botConfirmed[0]);
@@ -240,8 +240,8 @@ public class CharacterSelect extends JPanel implements KeyListener, ActionListen
 
         drawModeTag(g,W);
 
-        int cw=230,ch=320,gap=18,totalW=4*cw+3*gap,sx=(W-totalW)/2,sy=120;
-        for(int i=0;i<4;i++) drawCharCard(g,i,sx+i*(cw+gap),sy,cw,ch);
+        int cw=Math.min(230,(W-80)/5),ch=320,gap=14,totalW=5*cw+4*gap,sx=(W-totalW)/2,sy=120;
+        for(int i=0;i<5;i++) drawCharCard(g,i,sx+i*(cw+gap),sy,cw,ch);
 
         drawBottomPanels(g,W,H);
         drawCharInstructions(g,W,H);
@@ -409,12 +409,12 @@ public class CharacterSelect extends JPanel implements KeyListener, ActionListen
         if(phase==0){
             // Phase 0: difficulty then bot char
             if(!difficultyDone){
-                if(code==KeyEvent.VK_A||code==KeyEvent.VK_LEFT)  botDifficulty=(botDifficulty+3)%4;
-                if(code==KeyEvent.VK_D||code==KeyEvent.VK_RIGHT) botDifficulty=(botDifficulty+1)%4;
+                if(code==KeyEvent.VK_A||code==KeyEvent.VK_LEFT)  botDifficulty=(botDifficulty+3)%5;
+                if(code==KeyEvent.VK_D||code==KeyEvent.VK_RIGHT) botDifficulty=(botDifficulty+1)%5;
                 if(code==KeyEvent.VK_ENTER||code==KeyEvent.VK_F) difficultyDone=true;
             } else if(!allBotDone()){
-                if(code==KeyEvent.VK_A||code==KeyEvent.VK_LEFT)  botCursor=(botCursor+3)%4;
-                if(code==KeyEvent.VK_D||code==KeyEvent.VK_RIGHT) botCursor=(botCursor+1)%4;
+                if(code==KeyEvent.VK_A||code==KeyEvent.VK_LEFT)  botCursor=(botCursor+3)%5;
+                if(code==KeyEvent.VK_D||code==KeyEvent.VK_RIGHT) botCursor=(botCursor+1)%5;
                 if(code==KeyEvent.VK_ENTER||code==KeyEvent.VK_F){
                     botSelections[botSlot]=botCursor;
                     botConfirmed[botSlot]=true;
@@ -426,13 +426,13 @@ public class CharacterSelect extends JPanel implements KeyListener, ActionListen
         } else {
             // Phase 1: player character select
             if(!p1Confirmed[p1Slot]){
-                if(code==KeyEvent.VK_A) p1Cursor=(p1Cursor+3)%4;
-                if(code==KeyEvent.VK_D) p1Cursor=(p1Cursor+1)%4;
+                if(code==KeyEvent.VK_A) p1Cursor=(p1Cursor+3)%5;
+                if(code==KeyEvent.VK_D) p1Cursor=(p1Cursor+1)%5;
                 if(code==KeyEvent.VK_F){p1Selections[p1Slot]=p1Cursor;p1Confirmed[p1Slot]=true;if(p1Slot<slots-1)p1Slot++;}
             }
             if(gameMode!=2&&gameMode!=3&&!p2Confirmed[p2Slot]){
-                if(code==KeyEvent.VK_LEFT)    p2Cursor=(p2Cursor+3)%4;
-                if(code==KeyEvent.VK_RIGHT)   p2Cursor=(p2Cursor+1)%4;
+                if(code==KeyEvent.VK_LEFT)    p2Cursor=(p2Cursor+3)%5;
+                if(code==KeyEvent.VK_RIGHT)   p2Cursor=(p2Cursor+1)%5;
                 if(code==KeyEvent.VK_NUMPAD1){p2Selections[p2Slot]=p2Cursor;p2Confirmed[p2Slot]=true;if(p2Slot<slots-1)p2Slot++;}
             }
             boolean ready=allP1Done()&&(gameMode==2||gameMode==3||allP2Done());
