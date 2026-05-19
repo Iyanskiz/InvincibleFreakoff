@@ -19,6 +19,13 @@ public class HealthBar {
         this.fighterName = name;
     }
 
+    /** Reposition this bar — called from drawHUD once we know the real panel width */
+    public void reposition(int newX, int newY, int newWidth) {
+        this.x     = newX;
+        this.y     = newY;
+        this.width = newWidth;
+    }
+
     public void update(int currentHealth, int maxHealth) {
         float target = (float) currentHealth / maxHealth;
         if (displayedHealth > target) {
@@ -34,12 +41,14 @@ public class HealthBar {
 
         float pct = displayedHealth;
 
+        // Background / empty bar
         g.setColor(new Color(20, 20, 20));
         g.fillRoundRect(x, y, width, height, height, height);
 
         g.setColor(new Color(100, 0, 0));
         g.fillRoundRect(x + 2, y + 2, width - 4, height - 4, height, height);
 
+        // Health colour
         Color healthColor;
         if (pct > 0.6f)      healthColor = new Color(60, 200, 60);
         else if (pct > 0.3f) healthColor = new Color(220, 180, 0);
@@ -49,21 +58,26 @@ public class HealthBar {
         if (fillW < 0) fillW = 0;
 
         if (isPlayer1) {
+            // P1 fills left-to-right
             g.setColor(healthColor);
             g.fillRoundRect(x + 2, y + 2, fillW, height - 4, height, height);
             g.setColor(new Color(255, 255, 255, 40));
             g.fillRoundRect(x + 2, y + 2, fillW, (height - 4) / 2, height, height);
         } else {
+            // P2 fills right-to-left
             g.setColor(healthColor);
             g.fillRoundRect(x + 2 + (width - 4 - fillW), y + 2, fillW, height - 4, height, height);
             g.setColor(new Color(255, 255, 255, 40));
             g.fillRoundRect(x + 2 + (width - 4 - fillW), y + 2, fillW, (height - 4) / 2, height, height);
         }
+
+        // Border
         g.setColor(new Color(255, 255, 255, 80));
         g.setStroke(new BasicStroke(2));
         g.drawRoundRect(x, y, width, height, height, height);
         g.setStroke(new BasicStroke(1));
 
+        // HP text centred on bar
         g.setFont(new Font("Arial", Font.BOLD, 11));
         String hpText = currentHealth + " / " + maxHealth;
         FontMetrics fm = g.getFontMetrics();
@@ -73,6 +87,7 @@ public class HealthBar {
         g.setColor(Color.WHITE);
         g.drawString(hpText, tx, y + height - 4);
 
+        // Fighter name
         if (fighterName != null) {
             g.setFont(new Font("Arial", Font.BOLD, 14));
             g.setColor(new Color(255, 220, 50));

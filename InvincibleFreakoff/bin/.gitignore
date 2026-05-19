@@ -1,3 +1,8 @@
+<<<<<<< HEAD
+=======
+/imgs/
+/Anissa.class
+>>>>>>> branch 'master' of https://github.com/Iyanskiz/InvincibleFreakoff.git
 /CharacterSelect.class
 /Conquest.class
 /Fighter$State.class
@@ -22,5 +27,8 @@
 /Platform$PlatformStyle.class
 /Platform.class
 /Thragg.class
+<<<<<<< HEAD
 /imgs/
+=======
+>>>>>>> branch 'master' of https://github.com/Iyanskiz/InvincibleFreakoff.git
 /pat.txt
