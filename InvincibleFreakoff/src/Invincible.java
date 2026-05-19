@@ -12,7 +12,7 @@ public class Invincible extends Fighter {
         accentColor      = new Color(255, 220, 0);
         attackDamage     = 10;
         animSpeed        = 5;
-        width            = 120;
+        width            = 118;  // same frame as Anissa — younger/smaller hero
         height           = 155;
         specialThreshold = 80;  // fastest to charge — he's scrappy
 

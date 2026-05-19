@@ -9,7 +9,7 @@ public class Platform {
     public PlatformStyle style;
 
     public enum PlatformStyle {
-        CITY, SPACE, STORM, VOID, VOLCANO, THRONE, ARCTIC
+        CITY, SPACE, STORM, VOID, VOLCANO, THRONE, ARCTIC, GCI, MOON, BATTLEFIELD
     }
 
     public Platform(int x, int y, int w, PlatformStyle style) {
@@ -24,7 +24,10 @@ public class Platform {
             case VOID:    drawVoid(g, tick);   break;
             case VOLCANO: drawVolcano(g, tick);break;
             case THRONE:  drawThrone(g, tick); break;
-            case ARCTIC:  drawArctic(g, tick); break;
+            case ARCTIC:      drawArctic(g, tick);      break;
+            case GCI:         drawGci(g, tick);         break;
+            case MOON:        drawMoon(g, tick);        break;
+            case BATTLEFIELD: drawBattlefield(g, tick); break;
         }
         // Drop-hint text drawn from GamePanel; nothing here
     }
@@ -142,6 +145,52 @@ public class Platform {
         g.setStroke(new BasicStroke(2));
         g.drawLine(x + 4, y + 1, x + w - 4, y + 1);
         g.setStroke(new BasicStroke(1));
+    }
+
+    private void drawGci(Graphics2D g, int tick) {
+        float pulse = (float)(Math.sin(tick * 0.08 + x * 0.02) * 0.3 + 0.7);
+        g.setColor(new Color(18, 28, 38));
+        g.fillRoundRect(x, y, w, h, 4, 4);
+        g.setColor(new Color(30, 45, 58));
+        g.fillRoundRect(x + 2, y + 2, w - 4, h - 8, 3, 3);
+        g.setColor(new Color(0, 220, 255, (int)(pulse * 200)));
+        g.setStroke(new BasicStroke(2));
+        g.drawLine(x + 4, y + 1, x + w - 4, y + 1);
+        g.setStroke(new BasicStroke(1));
+        for (int lx = x + 10; lx < x + w - 8; lx += 28) {
+            g.setColor(new Color(0, 180, 220, (int)(pulse * 140)));
+            g.fillRect(lx, y + 5, 12, 3);
+        }
+    }
+
+    private void drawMoon(Graphics2D g, int tick) {
+        g.setColor(new Color(72, 72, 82));
+        g.fillRoundRect(x, y, w, h, 5, 5);
+        g.setColor(new Color(95, 95, 108));
+        g.fillRoundRect(x + 2, y + 2, w - 4, h - 7, 4, 4);
+        for (int c = 0; c < 3; c++) {
+            int cx = x + 18 + c * (w / 3);
+            g.setColor(new Color(55, 55, 65));
+            g.fillOval(cx, y + 4, 10 + c * 2, 6);
+        }
+        g.setColor(new Color(200, 210, 230, 90));
+        g.setStroke(new BasicStroke(2));
+        g.drawLine(x + 3, y + 1, x + w - 3, y + 1);
+        g.setStroke(new BasicStroke(1));
+    }
+
+    private void drawBattlefield(Graphics2D g, int tick) {
+        float glow = (float)(Math.sin(tick * 0.06 + x * 0.01) * 0.3 + 0.7);
+        g.setColor(new Color(35, 8, 8));
+        g.fillRoundRect(x, y, w, h, 3, 3);
+        g.setColor(new Color(55, 15, 12));
+        g.fillRoundRect(x + 2, y + 2, w - 4, h - 8, 2, 2);
+        g.setColor(new Color(180, 20, 20, (int)(glow * 120)));
+        g.setStroke(new BasicStroke(2));
+        g.drawLine(x + 6, y + 1, x + w - 6, y + 1);
+        g.setStroke(new BasicStroke(1));
+        g.setColor(new Color(120, 0, 0, (int)(glow * 70)));
+        g.fillRect(x + 8, y + h, w - 16, 5);
     }
 
     /** Returns a hint rect for the drop-through indicator */

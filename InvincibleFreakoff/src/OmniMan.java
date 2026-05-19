@@ -11,8 +11,8 @@ public class OmniMan extends Fighter {
         accentColor      = new Color(240, 240, 240);
         attackDamage     = 14;
         animSpeed        = 6;
-        width            = 124;   // wider than everyone except Thragg (128)
-        height           = 160;   // taller than everyone except Thragg (162)
+        width            = 138;   // imposing patriarch — larger than Mark & Anissa
+        height           = 178;
         specialThreshold = 120;
 
         imgIdle       = loadImage("OmniLevitating.png");

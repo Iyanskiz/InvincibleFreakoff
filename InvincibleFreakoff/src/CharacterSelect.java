@@ -42,10 +42,10 @@ public class CharacterSelect extends JPanel implements KeyListener, ActionListen
     private static final String[] DIFF_NAMES  = {"EASY","MEDIUM","HARD","NIGHTMARE"};
     private static final Color[]  DIFF_COLORS = {new Color(80,200,80),new Color(255,200,50),new Color(255,100,50),new Color(200,0,255)};
     private static final String[] DIFF_DESC   = {
-        "Bot moves slowly, rarely attacks",
-        "Balanced challenge — attacks and defends",
-        "Aggressive AI — fast combos and blocks",
-        "Relentless — near-perfect reactions"
+        "Smarter spacing — blocks and punishes openings",
+        "Aggressive — combos, jumps, and special usage",
+        "Fast pressure — counters, heavies, and platform play",
+        "Relentless — blocks windups, spams offense, reads you"
     };
 
     private BufferedImage[] previewImages = new BufferedImage[5];
@@ -102,6 +102,7 @@ public class CharacterSelect extends JPanel implements KeyListener, ActionListen
     // ── Phase 0: Difficulty selection ─────────────────────────────────────────
 
     private void drawDifficultyPhase(Graphics2D g, int W, int H){
+        botDifficulty = Math.min(3, Math.max(0, botDifficulty));
         // Title
         g.setFont(new Font("Impact",Font.PLAIN,48));
         FontMetrics fm=g.getFontMetrics();
@@ -409,8 +410,8 @@ public class CharacterSelect extends JPanel implements KeyListener, ActionListen
         if(phase==0){
             // Phase 0: difficulty then bot char
             if(!difficultyDone){
-                if(code==KeyEvent.VK_A||code==KeyEvent.VK_LEFT)  botDifficulty=(botDifficulty+3)%5;
-                if(code==KeyEvent.VK_D||code==KeyEvent.VK_RIGHT) botDifficulty=(botDifficulty+1)%5;
+                if(code==KeyEvent.VK_A||code==KeyEvent.VK_LEFT)  botDifficulty=(botDifficulty+3)%4;
+                if(code==KeyEvent.VK_D||code==KeyEvent.VK_RIGHT) botDifficulty=(botDifficulty+1)%4;
                 if(code==KeyEvent.VK_ENTER||code==KeyEvent.VK_F) difficultyDone=true;
             } else if(!allBotDone()){
                 if(code==KeyEvent.VK_A||code==KeyEvent.VK_LEFT)  botCursor=(botCursor+3)%5;

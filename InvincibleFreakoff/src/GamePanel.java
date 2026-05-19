@@ -31,7 +31,11 @@ public class GamePanel extends JPanel implements ActionListener, KeyListener {
     public static final int VIEW_W  = 1600;
     public static final int VIEW_H  = 800;
     public static final int WORLD_W  = 2400;
-    public static final int GROUND_Y = 650;
+    public static final int GROUND_Y     = 650;
+    /** Visible floor surface in world space (matches stage background draw line). */
+    public static final int FLOOR_LINE_Y = GROUND_Y + 150;
+    private static final int CAM_BOTTOM_MARGIN = 28;
+    private static final int CAM_FLOOR_PAD       = 20;
 
     private float camTX    = 0f;
     private float camTY    = 0f;
@@ -43,7 +47,7 @@ public class GamePanel extends JPanel implements ActionListener, KeyListener {
 
     // Stage
     private int currentStage = 0;
-    private static final int NUM_STAGES = 7;
+    private static final int NUM_STAGES = 10;
     private int meteorTimer = 0, meteorInterval = 180;
     private int lightningTimer = 0;
     private boolean thunderFlash = false;
@@ -128,8 +132,12 @@ public class GamePanel extends JPanel implements ActionListener, KeyListener {
             case 2:  sty = Platform.PlatformStyle.STORM;   break;
             case 3:  sty = Platform.PlatformStyle.VOID;    break;
             case 4:  sty = Platform.PlatformStyle.VOLCANO; break;
-            case 5:  sty = Platform.PlatformStyle.THRONE;  break;
-            default: sty = Platform.PlatformStyle.ARCTIC;  break;
+            case 5:  sty = Platform.PlatformStyle.THRONE;     break;
+            case 6:  sty = Platform.PlatformStyle.ARCTIC;     break;
+            case 7:  sty = Platform.PlatformStyle.GCI;        break;
+            case 8:  sty = Platform.PlatformStyle.MOON;       break;
+            case 9:  sty = Platform.PlatformStyle.BATTLEFIELD; break;
+            default: sty = Platform.PlatformStyle.CITY;     break;
         }
         switch(stage) {
             case 0: // City
@@ -220,6 +228,45 @@ public class GamePanel extends JPanel implements ActionListener, KeyListener {
                 list.add(new Platform(960,  520, 130, sty));
                 list.add(new Platform(1660, 520, 130, sty));
                 list.add(new Platform(1230, 440, 130, sty));
+                break;
+            case 7: // GCI command deck
+                list.add(new Platform(90,   470, 240, sty));
+                list.add(new Platform(400,  360, 200, sty));
+                list.add(new Platform(720,  280, 280, sty));
+                list.add(new Platform(1080, 360, 200, sty));
+                list.add(new Platform(1420, 280, 260, sty));
+                list.add(new Platform(1780, 360, 200, sty));
+                list.add(new Platform(2100, 470, 240, sty));
+                list.add(new Platform(300,  530, 160, sty));
+                list.add(new Platform(960,  530, 160, sty));
+                list.add(new Platform(1620, 530, 160, sty));
+                break;
+            case 8: // Moon surface
+                list.add(new Platform(70,   440, 210, sty));
+                list.add(new Platform(380,  330, 190, sty));
+                list.add(new Platform(700,  230, 300, sty));
+                list.add(new Platform(1080, 330, 190, sty));
+                list.add(new Platform(1400, 230, 280, sty));
+                list.add(new Platform(1740, 330, 190, sty));
+                list.add(new Platform(2060, 440, 210, sty));
+                list.add(new Platform(250,  510, 140, sty));
+                list.add(new Platform(920,  510, 140, sty));
+                list.add(new Platform(1580, 510, 140, sty));
+                list.add(new Platform(1180, 420, 150, sty));
+                break;
+            case 9: // Viltrum blood plains
+                list.add(new Platform(100,  480, 220, sty));
+                list.add(new Platform(430,  370, 180, sty));
+                list.add(new Platform(760,  260, 270, sty));
+                list.add(new Platform(1120, 370, 180, sty));
+                list.add(new Platform(1460, 260, 270, sty));
+                list.add(new Platform(1800, 370, 180, sty));
+                list.add(new Platform(2120, 480, 220, sty));
+                list.add(new Platform(320,  545, 140, sty));
+                list.add(new Platform(1000, 545, 140, sty));
+                list.add(new Platform(1680, 545, 140, sty));
+                list.add(new Platform(640,  455, 130, sty));
+                list.add(new Platform(1320, 455, 130, sty));
                 break;
         }
         return list;
@@ -397,6 +444,7 @@ public class GamePanel extends JPanel implements ActionListener, KeyListener {
         Fighter[] all = {p1, p2, p1b, p2b};
         float minX = Float.MAX_VALUE, maxX = -Float.MAX_VALUE;
         float minY = Float.MAX_VALUE, maxY = -Float.MAX_VALUE;
+        float lowestFeet = FLOOR_LINE_Y;
         int count = 0;
         for (Fighter f : all) {
             if (f == null || f.isDead()) continue;
@@ -404,37 +452,49 @@ public class GamePanel extends JPanel implements ActionListener, KeyListener {
             maxX = Math.max(maxX, f.x + f.width);
             minY = Math.min(minY, f.y);
             maxY = Math.max(maxY, f.y + f.height);
+            lowestFeet = Math.max(lowestFeet, f.y + f.height + 14);
             count++;
         }
         if (count == 0) return;
 
+        // Always frame the floor strip and feet — not just fighter torsos
+        maxY = Math.max(maxY, FLOOR_LINE_Y + CAM_FLOOR_PAD);
+        maxY = Math.max(maxY, lowestFeet);
+
         float worldCX = (minX + maxX) * 0.5f;
         float worldCY = (minY + maxY) * 0.5f;
+        // Bias center down so close zoom keeps feet in view
+        worldCY += (maxY - minY) * 0.14f;
 
-        // Tighter padding so fighters appear larger on screen
-        float padX = 200f, padY = 120f;
+        float padX = 200f, padY = 140f;
         float spanX = Math.max(500f, (maxX - minX) + padX * 2f);
-        float spanY = Math.max(350f, (maxY - minY) + padY * 2f);
+        float spanY = Math.max(420f, (maxY - minY) + padY * 2f);
 
         float scaleX = viewW / spanX;
         float scaleY = viewH / spanY;
         float targetScale = Math.min(scaleX, scaleY);
-        // Tighter zoom range — min 0.7 keeps fighters big, max 1.8 for close fights
         targetScale = Math.max(0.7f, Math.min(1.8f, targetScale));
 
         float targetTX = viewW  * 0.5f - worldCX * targetScale;
         float targetTY = viewH  * 0.5f - worldCY * targetScale;
 
-        // Clamp so the ground (GROUND_Y + some floor) never floats above the bottom
-        float groundScreenY = targetTY + (GROUND_Y + 100) * targetScale;
-        if (groundScreenY < viewH - 80) {
-            targetTY = viewH - 80 - (GROUND_Y + 100) * targetScale;
+        float floorAnchor = Math.max(FLOOR_LINE_Y, lowestFeet);
+        float minFloorScreenY = viewH - CAM_BOTTOM_MARGIN;
+        float groundScreenY = targetTY + floorAnchor * targetScale;
+        if (groundScreenY < minFloorScreenY) {
+            targetTY = minFloorScreenY - floorAnchor * targetScale;
         }
 
         float lerp = 0.08f;
         camScale += (targetScale - camScale) * lerp;
         camTX    += (targetTX    - camTX)    * lerp;
         camTY    += (targetTY    - camTY)    * lerp;
+
+        // Enforce floor visibility on the smoothed camera too
+        float liveFloorY = camTY + floorAnchor * camScale;
+        if (liveFloorY < minFloorScreenY) {
+            camTY = minFloorScreenY - floorAnchor * camScale;
+        }
     }
 
     // ── Hit detection ─────────────────────────────────────────────────────────
@@ -481,86 +541,155 @@ public class GamePanel extends JPanel implements ActionListener, KeyListener {
 
     private void runBotAI(Fighter bot, Fighter target, int timer) {
         if (bot == null || bot.isDead() || target == null || target.isDead()) return;
-        boolean isBot1 = (bot == p2);
+        boolean slotP2 = (bot == p2);
 
-        int atkCool  = isBot1 ? bot1AttackCooldown : bot2AttackCooldown;
-        int jmpCool  = isBot1 ? bot1JumpCooldown   : bot2JumpCooldown;
-        int specCool = isBot1 ? bot1SpecCooldown   : bot2SpecCooldown;
-        int blkTimer = isBot1 ? bot1BlockTimer     : bot2BlockTimer;
+        int atkCool  = slotP2 ? bot1AttackCooldown : bot2AttackCooldown;
+        int jmpCool  = slotP2 ? bot1JumpCooldown   : bot2JumpCooldown;
+        int specCool = slotP2 ? bot1SpecCooldown   : bot2SpecCooldown;
+        int blkTimer = slotP2 ? bot1BlockTimer     : bot2BlockTimer;
 
         if (atkCool  > 0) atkCool--;
         if (jmpCool  > 0) jmpCool--;
         if (specCool > 0) specCool--;
         if (blkTimer > 0) blkTimer--;
 
-        int[]   attackRange        = {140, 160, 175, 185};
-        int[]   attackCooldownBase = { 45,  28,  14,   6};
-        int[]   jumpCooldownBase   = {180, 110,  65,  35};
-        int[]   specCooldownBase   = {200, 120,  70,  30};
-        int[]   blockChance        = {  5,  18,  35,  65};
+        int diff = Math.min(3, Math.max(0, botDifficulty));
 
-        int range  = attackRange[botDifficulty];
-        int botCX  = bot.x    + bot.width  / 2;
-        int tarCX  = target.x + target.width / 2;
-        int dist   = Math.abs(botCX - tarCX);
-        int idealDist = (int)(range * 0.72f);
-        int deadzone  = 20;
+        int[] attackRange        = {158, 182, 202, 225};
+        int[] attackCooldownBase = { 30,  14,   6,   2};
+        int[] jumpCooldownBase   = {120,  68,  38,  16};
+        int[] specCooldownBase   = {140,  68,  35,  12};
+        int[] blockChance        = { 22,  48,  68,  92};
+        int[] heavyChance        = { 18,  35,  52,  72};
+        int[] pressureChance     = {  8,  22,  42,  70};
 
-        if (!bot.isAttacking && !bot.isHurt) {
+        int range     = attackRange[diff];
+        int botCX     = bot.x + bot.width / 2;
+        int tarCX     = target.x + target.width / 2;
+        int dist      = Math.abs(botCX - tarCX);
+        int idealDist = (int)(range * (diff >= 2 ? 0.82f : 0.76f));
+        int deadzone  = 14 - diff * 2;
+
+        boolean canMove = !bot.isAttacking && !bot.isHurt;
+
+        // Closing distance — always pursue unless already in strike range
+        if (canMove) {
             if (dist > idealDist + deadzone) {
                 if (botCX < tarCX) bot.moveRight(); else bot.moveLeft();
-            } else if (dist < idealDist - deadzone && botDifficulty >= 1) {
-                if (botCX < tarCX) bot.moveLeft();  else bot.moveRight();
-            }
-        }
-
-        boolean incomingAttack = target.isAttacking && dist < 220;
-        if (incomingAttack && blkTimer == 0 && rand.nextInt(100) < blockChance[botDifficulty]) {
-            blkTimer = 14 + rand.nextInt(10);
-        }
-        bot.setBlockHeld(blkTimer > 0 && incomingAttack);
-
-        if (dist <= range && atkCool == 0 && !bot.isBlocking) {
-            int r = rand.nextInt(10);
-            if (r < 7) {
-                bot.lightAttack();
-                atkCool = attackCooldownBase[botDifficulty] + rand.nextInt(12);
-            } else if (r < 9) {
-                if (dist < range * 0.7f || botDifficulty >= 2) {
-                    bot.heavyAttack();
-                    atkCool = attackCooldownBase[botDifficulty] + 25 + rand.nextInt(15);
-                } else {
-                    bot.lightAttack();
-                    atkCool = attackCooldownBase[botDifficulty] + rand.nextInt(12);
+            } else if (dist < idealDist - deadzone && diff >= 1) {
+                boolean retreat = target.isAttacking || target.heavyStartup > 0;
+                if (retreat || (diff >= 2 && dist < range * 0.45f)) {
+                    if (botCX < tarCX) bot.moveLeft(); else bot.moveRight();
                 }
             }
         }
 
-        if (bot.specialReady() && dist <= range + 80 && specCool == 0 && !bot.isBlocking) {
-            bot.specialMove();
-            specCool = specCooldownBase[botDifficulty] + rand.nextInt(20);
+        boolean incoming = (target.isAttacking || target.heavyStartup > 0)
+                && dist < 210 + diff * 25;
+        boolean windup   = target.heavyStartup > 0 && dist < 260;
+
+        if (incoming && blkTimer == 0) {
+            int chance = blockChance[diff] + (windup ? 35 : 0);
+            if (rand.nextInt(100) < chance) {
+                blkTimer = 12 + diff * 5 + rand.nextInt(8);
+            }
+        }
+        if (diff >= 2 && incoming && dist < 200) {
+            blkTimer = Math.max(blkTimer, 10 + diff * 3);
+        }
+        bot.setBlockHeld(blkTimer > 0 && (incoming || windup));
+
+        // Punish hurt opponent
+        if (target.isHurt && dist <= range + 40 && atkCool == 0 && !bot.isBlocking && canMove) {
+            if (diff >= 1 || rand.nextInt(100) < 55) {
+                bot.heavyAttack();
+                atkCool = attackCooldownBase[diff] + 8 + rand.nextInt(8);
+            }
         }
 
+        // Main attack logic
+        if (dist <= range && atkCool == 0 && !bot.isBlocking && canMove) {
+            boolean preferHeavy = dist < range * 0.78f
+                    || target.isBlocking
+                    || target.isHurt
+                    || rand.nextInt(100) < heavyChance[diff];
+            if (preferHeavy && (diff >= 1 || rand.nextInt(100) < 45)) {
+                bot.heavyAttack();
+                atkCool = attackCooldownBase[diff] + 16 + rand.nextInt(10);
+            } else {
+                bot.lightAttack();
+                atkCool = attackCooldownBase[diff] + rand.nextInt(6);
+            }
+        }
+
+        // Special — use when close, enemy weak, or after opening
+        float tarHp = (float) target.currentHealth / target.maxHealth;
+        if (bot.specialReady() && specCool == 0 && !bot.isBlocking && canMove) {
+            boolean moment = dist <= range + 90
+                    || tarHp < 0.4f
+                    || target.isHurt
+                    || (diff >= 2 && dist < 300 && !target.isBlocking);
+            if (moment) {
+                bot.specialMove();
+                specCool = specCooldownBase[diff] + rand.nextInt(12);
+            }
+        }
+
+        // Vertical play — chase platforms and jump-ins
         int heightDiff = bot.y - target.y;
-        int jumpBias = heightDiff > 100 ? 40 : (botDifficulty == 0 ? 2 : botDifficulty == 1 ? 5 : botDifficulty == 2 ? 10 : 18);
-        if (jmpCool == 0 && rand.nextInt(100) < jumpBias) {
+        if (heightDiff > 70 && jmpCool == 0 && diff >= 1) {
             bot.jump();
-            jmpCool = jumpCooldownBase[botDifficulty] + rand.nextInt(30);
+            jmpCool = jumpCooldownBase[diff] / 2 + rand.nextInt(12);
+        }
+        if (bot.standingPlatform != null && target.y > bot.y + 40
+                && dist < 220 && diff >= 1 && jmpCool == 0 && canMove) {
+            bot.dropDown();
+            jmpCool = 28;
         }
 
-        if (botDifficulty == 3) {
-            if (dist > 60 && !bot.isAttacking && !bot.isHurt) {
+        int jumpBias = heightDiff > 90 ? 55
+                : (diff == 0 ? 8 : diff == 1 ? 14 : diff == 2 ? 24 : 35);
+        if (jmpCool == 0 && dist > range * 0.5f && dist < range * 1.4f
+                && rand.nextInt(100) < jumpBias) {
+            bot.jump();
+            jmpCool = jumpCooldownBase[diff] + rand.nextInt(18);
+        }
+
+        // Hard+ — sustained pressure and counter-attacks
+        if (diff >= 2 && canMove) {
+            if (dist <= range + 25 && atkCool == 0 && rand.nextInt(100) < pressureChance[diff]) {
+                bot.lightAttack();
+                atkCool = Math.max(2, attackCooldownBase[diff] - 2);
+            }
+            if (target.isAttacking && dist < range + 50 && atkCool == 0 && !target.isBlocking) {
+                bot.heavyAttack();
+                atkCool = attackCooldownBase[diff] + 4;
+            }
+        }
+
+        // Nightmare — relentless offense and defense
+        if (diff == 3) {
+            if (dist > 50 && canMove) {
                 if (botCX < tarCX) bot.moveRight(); else bot.moveLeft();
             }
-            if (target.isAttacking && dist < 250 && atkCool == 0) {
-                bot.heavyAttack(); atkCool = 5;
+            if (dist <= range + 35 && atkCool == 0 && canMove) {
+                if (target.isBlocking) bot.heavyAttack();
+                else bot.lightAttack();
+                atkCool = 3 + rand.nextInt(4);
             }
-            if (dist < 165 && atkCool == 0) { bot.lightAttack(); atkCool = 6; }
-            if (target.isAttacking && dist < 230) blkTimer = 14;
-            if (jmpCool == 0 && rand.nextInt(100) < 22) { bot.jump(); jmpCool = 35; }
+            if (target.isAttacking && dist < 260) blkTimer = Math.max(blkTimer, 16);
+            if (target.heavyStartup > 0 && dist < 280) blkTimer = Math.max(blkTimer, 20);
+            if (bot.specialReady() && specCool == 0 && dist < 320) {
+                bot.specialMove();
+                specCool = 10;
+            }
+            if (jmpCool == 0 && dist < 200 && rand.nextInt(100) < 30) {
+                bot.jump();
+                jmpCool = 22;
+            }
         }
 
-        if (isBot1) {
+        if (slotP2) {
             bot1AttackCooldown = atkCool; bot1JumpCooldown = jmpCool;
             bot1SpecCooldown   = specCool; bot1BlockTimer  = blkTimer;
         } else {
@@ -667,6 +796,27 @@ public class GamePanel extends JPanel implements ActionListener, KeyListener {
                     flashes.add(new ScreenFlash(new Color(180,210,255,30),5));
                 }
                 break;
+            case 7: // GCI — scanlines & alert flashes
+                if(tick%4==0) particles.add(new Particle(rand.nextInt(WORLD_W),rand.nextInt(400),
+                    (rand.nextFloat()-0.5f)*0.5f, rand.nextFloat()*2+0.5f,
+                    new Color(0,200,255,80+rand.nextInt(60)), 25+rand.nextInt(20)));
+                if(rand.nextInt(200)==0) flashes.add(new ScreenFlash(new Color(0,180,255,35),6));
+                break;
+            case 8: // Moon — drifting dust in low gravity
+                if(rand.nextInt(40)==0) spaceDebris.add(new SpaceDebris(WORLD_W+10, 80+rand.nextInt(380)));
+                if(tick%6==0) particles.add(new Particle(rand.nextInt(WORLD_W),GROUND_Y+120,
+                    (rand.nextFloat()-0.5f)*1.2f, -rand.nextFloat()*1.5f-0.2f,
+                    new Color(180,185,200,100+rand.nextInt(80)), 35+rand.nextInt(25)));
+                break;
+            case 9: // Blood plains — ash, embers, war meteors
+                if(tick%2==0) particles.add(new Particle(rand.nextInt(WORLD_W),-8,
+                    (rand.nextFloat()-0.4f)*2, rand.nextFloat()*4+1,
+                    rand.nextInt(3)==0?new Color(200,0,0,150):new Color(80,0,0,120), 45+rand.nextInt(30)));
+                meteorTimer++;
+                if(meteorTimer>=meteorInterval){meteorTimer=0;meteorInterval=100+rand.nextInt(100);
+                    meteors.add(new Meteor(150+rand.nextInt(WORLD_W-300)));}
+                if(tick%20==0) flashes.add(new ScreenFlash(new Color(120,0,0,25),4));
+                break;
         }
     }
 
@@ -727,15 +877,21 @@ public class GamePanel extends JPanel implements ActionListener, KeyListener {
             case 3: drawVoid(g, WORLD_W, H);       break;
             case 4: drawVolcano(g, WORLD_W, H);    break;
             case 5: drawThroneRoom(g, WORLD_W, H); break;
-            case 6: drawAntarctic(g, WORLD_W, H);  break;
+            case 6: drawAntarctic(g, WORLD_W, H);     break;
+            case 7: drawGciHub(g, WORLD_W, H);        break;
+            case 8: drawMoonSurface(g, WORLD_W, H);   break;
+            case 9: drawBloodPlains(g, WORLD_W, H);   break;
         }
         g.setTransform(bgBase);
     }
 
     private void drawCity(Graphics2D g, int W, int H) {
-        GradientPaint sky=new GradientPaint(0,0,new Color(15,5,5),0,H*0.5f,new Color(60,15,5));
+        GradientPaint sky=new GradientPaint(0,0,new Color(8,4,18),0,H*0.45f,new Color(45,8,12));
         g.setPaint(sky); g.fillRect(0,0,W,H);
-        g.setColor(new Color(200,60,0,70)); g.fillRect(0,(int)(H*0.35f),W,(int)(H*0.3f));
+        RadialGradientPaint blast=new RadialGradientPaint(W*0.35f,H*0.42f,W*0.5f,
+            new float[]{0f,1f},new Color[]{new Color(255,90,20,90),new Color(0,0,0,0)});
+        g.setPaint(blast); g.fillRect(0,0,W,H);
+        g.setColor(new Color(255,120,40,55)); g.fillRect(0,(int)(H*0.32f),W,(int)(H*0.35f));
         g.setColor(new Color(255,255,200,90));
         for(int i=0;i<70;i++){int sx=(i*173+30)%W,sy=(i*97+10)%150;g.fillOval(sx,sy,2,2);}
         g.setColor(new Color(8,4,4));
@@ -753,14 +909,22 @@ public class GamePanel extends JPanel implements ActionListener, KeyListener {
         g.setPaint(gr); g.fillRect(0,GROUND_Y+150,W,H-GROUND_Y-150);
         g.setColor(new Color(200,80,20,100)); g.setStroke(new BasicStroke(3));
         g.drawLine(0,GROUND_Y+150,W,GROUND_Y+150); g.setStroke(new BasicStroke(1));
-        for(int i=0;i<8;i++){int sx2=(i*200+80)%W;float a=0.28f+(float)Math.sin(tick*0.02+i)*0.08f;g.setColor(new Color(40,20,10,Math.max(0,Math.min(255,(int)(a*180)))));int sy2=GROUND_Y+100-(tick*2+i*30)%200;g.fillOval(sx2-15,sy2,42+i*4,28+i*3);}
+        for(int i=0;i<12;i++){int sx2=(i*165+50)%W;float a=0.35f+(float)Math.sin(tick*0.025+i)*0.12f;
+            g.setColor(new Color(50,25,12,Math.max(0,Math.min(255,(int)(a*200)))));
+            int sy2=GROUND_Y+90-(tick*3+i*25)%220; g.fillOval(sx2-18,sy2,48+i*5,32+i*4);}
+        for(int i=0;i<6;i++){int fx=(i*380+tick*2)%W;
+            g.setColor(new Color(255,180,60,(int)(80+Math.sin(tick*0.05+i)*40)));
+            g.fillRect(fx,GROUND_Y+120+rand.nextInt(40),4+rand.nextInt(6),12+rand.nextInt(20));}
     }
 
     private void drawSpace(Graphics2D g, int W, int H) {
-        GradientPaint sky=new GradientPaint(0,0,new Color(2,4,20),0,H,new Color(5,0,30));
+        GradientPaint sky=new GradientPaint(0,0,new Color(2,4,28),0,H,new Color(12,0,45));
         g.setPaint(sky); g.fillRect(0,0,W,H);
-        g.setColor(new Color(60,0,120,28)); g.fillOval(100,50,500,400);
-        g.setColor(new Color(0,40,120,22)); g.fillOval(700,100,400,350);
+        RadialGradientPaint neb=new RadialGradientPaint(W*0.25f,H*0.3f,W*0.6f,
+            new float[]{0f,1f},new Color[]{new Color(120,0,180,45),new Color(0,0,0,0)});
+        g.setPaint(neb); g.fillRect(0,0,W,H);
+        g.setColor(new Color(80,0,140,35)); g.fillOval(100,50,500,400);
+        g.setColor(new Color(0,50,140,28)); g.fillOval(700,100,400,350);
         for(int i=0;i<220;i++){int sx=(i*173+tick/3)%W,sy=(i*97+10)%(H-200);int br=Math.min(255,100+(i%5)*28);g.setColor(new Color(br,br,Math.min(255,br+40),190));g.fillOval(sx,sy,i%4==0?2:1,i%4==0?2:1);}
         RadialGradientPaint pl=new RadialGradientPaint(950,200,130,new float[]{0f,0.6f,1f},new Color[]{new Color(60,100,180),new Color(30,60,140),new Color(10,20,80)});
         g.setPaint(pl); g.fillOval(820,70,260,260);
@@ -904,6 +1068,80 @@ public class GamePanel extends JPanel implements ActionListener, KeyListener {
         g.setColor(new Color(200,230,255,50)); g.setStroke(new BasicStroke(1)); g.drawLine(0,GROUND_Y+131,W,GROUND_Y+131); g.setStroke(new BasicStroke(1));
     }
 
+    private void drawGciHub(Graphics2D g, int W, int H) {
+        GradientPaint sky=new GradientPaint(0,0,new Color(4,12,22),0,H,new Color(8,20,35));
+        g.setPaint(sky); g.fillRect(0,0,W,H);
+        g.setColor(new Color(0,40,60,40)); g.fillRect(0,0,W,H/2);
+        for(int row=0;row<8;row++) for(int col=0;col<30;col++){
+            if((row+col+tick/20)%5==0){
+                g.setColor(new Color(0,180,220,25+row*8));
+                g.fillRect(col*85,40+row*55,70,45);
+            }
+        }
+        g.setColor(new Color(0,255,255,12));
+        for(int i=0;i<W;i+=18) g.drawLine(i,0,i,H);
+        for(int i=0;i<H;i+=22) if(i%44==0) g.drawLine(0,i,W,i);
+        g.setColor(new Color(12,28,42));
+        int[]wx={0,0,120,120,280,280,450,450,620,620,800,800,980,980,1150,1150,1320,1320,1500,1500,1600,1600};
+        int[]wy={H,420,420,380,380,410,410,360,360,395,395,350,350,385,385,355,355,390,390,365,365,H};
+        g.fillPolygon(wx,wy,wx.length);
+        GradientPaint floor=new GradientPaint(0,GROUND_Y+150,new Color(12,35,48),0,H,new Color(4,12,20));
+        g.setPaint(floor); g.fillRect(0,GROUND_Y+150,W,H-GROUND_Y-130);
+        g.setColor(new Color(0,220,255,160)); g.setStroke(new BasicStroke(3));
+        g.drawLine(0,GROUND_Y+150,W,GROUND_Y+150); g.setStroke(new BasicStroke(1));
+        for(int i=0;i<9;i++){
+            float ph=(float)(Math.sin(tick*0.09+i)*0.4+0.6);
+            g.setColor(new Color(0,255,200,(int)(ph*120)));
+            g.fillRect(80+i*200,GROUND_Y+155,60,4);
+        }
+    }
+
+    private void drawMoonSurface(Graphics2D g, int W, int H) {
+        g.setColor(new Color(2,2,8)); g.fillRect(0,0,W,H);
+        RadialGradientPaint earth=new RadialGradientPaint(W*0.78f,120,95,
+            new float[]{0f,0.55f,1f},new Color[]{new Color(40,90,200),new Color(20,50,120),new Color(0,0,0,0)});
+        g.setPaint(earth); g.fillOval((int)(W*0.68f),30,200,200);
+        g.setColor(new Color(60,120,220,60)); g.fillOval((int)(W*0.72f),55,90,70);
+        for(int i=0;i<180;i++){int sx=(i*191+tick/5)%W,sy=(i*83+20)%(H-180);
+            g.setColor(new Color(220,220,230,140+rand.nextInt(80))); g.fillOval(sx,sy,i%5==0?2:1,i%5==0?2:1);}
+        g.setColor(new Color(55,55,65));
+        for(int i=0;i<14;i++){int cx=30+i*165,cy=GROUND_Y-20-(i%4)*25,r=35+(i%5)*12;
+            g.fillOval(cx,cy,r,r*3/4); g.setColor(new Color(42,42,50)); g.fillOval(cx+8,cy+6,r-15,(r*3/4)-12); g.setColor(new Color(55,55,65));}
+        GradientPaint reg=new GradientPaint(0,GROUND_Y+150,new Color(70,70,80),0,H,new Color(25,25,32));
+        g.setPaint(reg); g.fillRect(0,GROUND_Y+150,W,H-GROUND_Y-130);
+        g.setColor(new Color(200,210,230,140)); g.setStroke(new BasicStroke(2));
+        g.drawLine(0,GROUND_Y+150,W,GROUND_Y+150); g.setStroke(new BasicStroke(1));
+    }
+
+    private void drawBloodPlains(Graphics2D g, int W, int H) {
+        GradientPaint sky=new GradientPaint(0,0,new Color(25,0,5),0,H*0.55f,new Color(80,5,10));
+        g.setPaint(sky); g.fillRect(0,0,W,H);
+        g.setColor(new Color(120,0,0,35)); g.fillRect(0,0,W,H/2);
+        for(int i=0;i<4;i++){
+            float a=(float)(Math.sin(tick*0.03+i)*0.2+0.35);
+            g.setColor(new Color(180,0,0,(int)(a*80)));
+            g.fillOval(-50+i*500,60+i*40,400,120);
+        }
+        g.setColor(new Color(40,5,8));
+        int[]bx={0,0,150,220,380,450,600,700,880,960,1120,1200,1360,1440,1600,1600};
+        int[]by={H,450,450,400,400,440,440,390,390,430,430,385,385,425,425,H};
+        g.fillPolygon(bx,by,bx.length);
+        for(int i=0;i<10;i++){
+            int fx=60+i*220;
+            g.setColor(new Color(100,0,0,40+(i%3)*20));
+            g.fillRect(fx,GROUND_Y+100,3,60+rand.nextInt(40));
+        }
+        GradientPaint bloodFloor=new GradientPaint(0,GROUND_Y+150,new Color(90,8,8),0,H,new Color(35,2,2));
+        g.setPaint(bloodFloor); g.fillRect(0,GROUND_Y+150,W,H-GROUND_Y-130);
+        float pulse=(float)(Math.sin(tick*0.05)*0.25+0.75);
+        g.setColor(new Color(255,40,20,(int)(pulse*100))); g.setStroke(new BasicStroke(4));
+        g.drawLine(0,GROUND_Y+150,W,GROUND_Y+150); g.setStroke(new BasicStroke(1));
+        for(int i=0;i<14;i++){
+            g.setColor(new Color(140,0,0,60));
+            g.drawLine(i*175,GROUND_Y+152,i*175+40,GROUND_Y+175);
+        }
+    }
+
     // ── HUD ───────────────────────────────────────────────────────────────────
 
     private void drawHUD(Graphics2D g, int W, int H) {
@@ -948,7 +1186,8 @@ public class GamePanel extends JPanel implements ActionListener, KeyListener {
         if (tick < 180) {
             float a = Math.min(1f, (180 - tick) / 60f);
             String[] sn = {"CITY UNDER SIEGE","THE VOID OF SPACE","STORM'S WRATH",
-                           "THE DARK DIMENSION","VOLCANO'S FURY","VILTRUMITE THRONE","FROZEN WASTELAND"};
+                           "THE DARK DIMENSION","VOLCANO'S FURY","VILTRUMITE THRONE","FROZEN WASTELAND",
+                           "G.C.I. COMMAND DECK","LUNAR WAR ZONE","BLOOD PLAINS OF VILTRUM"};
             g.setFont(new Font("Impact", Font.PLAIN, 26));
             g.setColor(new Color(255, 220, 50, Math.max(0, Math.min(255, (int)(a * 190)))));
             fm = g.getFontMetrics();
@@ -1005,8 +1244,9 @@ public class GamePanel extends JPanel implements ActionListener, KeyListener {
             Color[]  dc = {new Color(80,200,80),new Color(255,200,50),new Color(255,100,50),new Color(200,0,255)};
             g.setFont(new Font("Impact", Font.PLAIN, 12));
             fm = g.getFontMetrics();
-            String dt = "BOT: " + dn[botDifficulty];
-            g.setColor(dc[botDifficulty]);
+            int diff = Math.min(3, Math.max(0, botDifficulty));
+            String dt = "BOT: " + dn[diff];
+            g.setColor(dc[diff]);
             g.drawString(dt, W - margin - fm.stringWidth(dt), infoY + 42);
         }
     }
@@ -1135,7 +1375,7 @@ public class GamePanel extends JPanel implements ActionListener, KeyListener {
 
     static class EnergyOrb {
         float x,y,vx,vy; int size; float phase; boolean dead=false;
-        EnergyOrb(float x,float y){Random r=new Random();this.x=x;this.y=y;vx=(r.nextFloat()-0.5f)*1.5f;vy=(r.nextFloat()-0.5f)*1.5f;size=8+r.nextInt(16);phase=r.nextFloat()*6.28f;}
+        EnergyOrb(float x,float y){Random r=new Random();this.x=x;this. y=y;vx=(r.nextFloat()-0.5f)*1.5f;vy=(r.nextFloat()-0.5f)*1.5f;size=8+r.nextInt(16);phase=r.nextFloat()*6.28f;}
         void update(){x+=vx;y+=vy;phase+=0.05f;if(x<0||x>WORLD_W||y<0||y>GROUND_Y+150)dead=true;}
         void draw(Graphics2D g){float pulse=(float)(Math.sin(phase)*0.3f+0.7f);int r2=(int)(size*pulse);RadialGradientPaint gp=new RadialGradientPaint(x,y,r2,new float[]{0f,0.5f,1f},new Color[]{new Color(200,100,255,200),new Color(120,0,200,120),new Color(60,0,120,0)});g.setPaint(gp);g.fillOval((int)(x-r2),(int)(y-r2),r2*2,r2*2);}
     }
