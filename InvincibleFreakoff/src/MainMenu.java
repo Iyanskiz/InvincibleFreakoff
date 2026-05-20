@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 import java.net.URL;
+import javax.sound.sampled.*; // Added for audio support
 
 public class MainMenu extends JPanel implements ActionListener, KeyListener {
 
@@ -17,10 +18,12 @@ public class MainMenu extends JPanel implements ActionListener, KeyListener {
     private List<MenuParticle> particles = new ArrayList<>();
     private List<float[]> stars = new ArrayList<>();
 
-    // --- TITLE SCREEN LOGIC ---
+    // --- TITLE SCREEN & AUDIO ---
     private static boolean firstTimeLaunch = true; 
     private boolean showingTitleScreen;
     private Image titleGif;
+    private Clip titleMusic; // Audio handler
+    // ----------------------------
 
     private static final String[] OPTIONS      = {"1  VS  1", "2  VS  2", "1  VS  BOT", "2  VS  2 BOT"};
     private static final String[] DESCRIPTIONS = {
@@ -44,10 +47,15 @@ public class MainMenu extends JPanel implements ActionListener, KeyListener {
         
         this.showingTitleScreen = firstTimeLaunch;
 
-        // Ensure this path matches your project structure (e.g., src/imgs/titlecard.gif)
+        // Load Title GIF
         URL imgUrl = getClass().getResource("/imgs/titlecard.gif");
         if (imgUrl != null) {
             titleGif = new ImageIcon(imgUrl).getImage();
+        }
+
+        // Initialize Audio (Only if it's the first launch)
+        if (showingTitleScreen) {
+            playTitleMusic("/sounds/title.wav"); // Recommend converting mp3 to wav
         }
 
         for (int i = 0; i < 300; i++)
@@ -55,6 +63,28 @@ public class MainMenu extends JPanel implements ActionListener, KeyListener {
             
         animTimer = new javax.swing.Timer(16, this);
         animTimer.start();
+    }
+
+    private void playTitleMusic(String path) {
+        try {
+            URL url = getClass().getResource(path);
+            if (url != null) {
+                AudioInputStream audioIn = AudioSystem.getAudioInputStream(url);
+                titleMusic = AudioSystem.getClip();
+                titleMusic.open(audioIn);
+                titleMusic.loop(Clip.LOOP_CONTINUOUSLY); // Loops the music
+                titleMusic.start();
+            }
+        } catch (Exception e) {
+            System.err.println("Music failed to load: " + e.getMessage());
+        }
+    }
+
+    private void stopTitleMusic() {
+        if (titleMusic != null && titleMusic.isRunning()) {
+            titleMusic.stop();
+            titleMusic.close();
+        }
     }
 
     @Override public void actionPerformed(ActionEvent e) {
@@ -91,6 +121,8 @@ public class MainMenu extends JPanel implements ActionListener, KeyListener {
         drawOptions(g, W, H);
         drawFooter(g, W, H);
     }
+
+    // --- RENDER METHODS ---
 
     private void drawBackground(Graphics2D g, int W, int H) {
         if (W <= 0 || H <= 0) return;
@@ -132,9 +164,9 @@ public class MainMenu extends JPanel implements ActionListener, KeyListener {
         g.drawString(l2, W/2 - l2w/2 + 4, titleY2 + 4);
 
         g.setPaint(new GradientPaint(0, titleY1-titleSize, new Color(255,240,80), 0, titleY1, new Color(255,140,0)));
-        g.drawString(l1, W/2 - l1w/2, titleY1); // Fixed
+        g.drawString(l1, W/2 - l1w/2, titleY1);
         g.setPaint(new GradientPaint(0, titleY2-titleSize, new Color(255,80,50), 0, titleY2, new Color(200,0,0)));
-        g.drawString(l2, W/2 - l2w/2, titleY2); // Fixed
+        g.drawString(l2, W/2 - l2w/2, titleY2);
     }
 
     private void drawOptions(Graphics2D g, int W, int H) {
@@ -176,7 +208,7 @@ public class MainMenu extends JPanel implements ActionListener, KeyListener {
         g.setFont(new Font("Impact", Font.PLAIN, sel ? titleSize+4 : titleSize));
         FontMetrics fm = g.getFontMetrics();
         g.setColor(sel ? col : new Color(150,150,160));
-        g.drawString(OPTIONS[index], cx + (cw-fm.stringWidth(OPTIONS[index]))/2, cy + ch/2); // Fixed
+        g.drawString(OPTIONS[index], cx + (cw-fm.stringWidth(OPTIONS[index]))/2, cy + ch/2);
     }
 
     private void drawControlsReminder(Graphics2D g, int W, int y) {
@@ -199,6 +231,7 @@ public class MainMenu extends JPanel implements ActionListener, KeyListener {
         int c = e.getKeyCode();
         if (showingTitleScreen) {
             if (c == KeyEvent.VK_ENTER) {
+                stopTitleMusic(); // Kill music when Enter is pressed
                 showingTitleScreen = false;
                 firstTimeLaunch = false;
                 repaint();
