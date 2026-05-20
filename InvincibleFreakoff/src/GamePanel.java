@@ -279,6 +279,7 @@ public class GamePanel extends JPanel implements ActionListener, KeyListener {
             case 2: return new Thragg(x, isP1);
             case 3: return new Conquest(x, isP1);
             case 4: return new Anissa(x, isP1);
+            case 5: return new TechJacket(x, isP1);
             default: return new Invincible(x, isP1);
         }
     }
@@ -457,13 +458,11 @@ public class GamePanel extends JPanel implements ActionListener, KeyListener {
         }
         if (count == 0) return;
 
-        // Always frame the floor strip and feet — not just fighter torsos
         maxY = Math.max(maxY, FLOOR_LINE_Y + CAM_FLOOR_PAD);
         maxY = Math.max(maxY, lowestFeet);
 
         float worldCX = (minX + maxX) * 0.5f;
         float worldCY = (minY + maxY) * 0.5f;
-        // Bias center down so close zoom keeps feet in view
         worldCY += (maxY - minY) * 0.14f;
 
         float padX = 200f, padY = 140f;
@@ -490,7 +489,6 @@ public class GamePanel extends JPanel implements ActionListener, KeyListener {
         camTX    += (targetTX    - camTX)    * lerp;
         camTY    += (targetTY    - camTY)    * lerp;
 
-        // Enforce floor visibility on the smoothed camera too
         float liveFloorY = camTY + floorAnchor * camScale;
         if (liveFloorY < minFloorScreenY) {
             camTY = minFloorScreenY - floorAnchor * camScale;
@@ -572,7 +570,6 @@ public class GamePanel extends JPanel implements ActionListener, KeyListener {
 
         boolean canMove = !bot.isAttacking && !bot.isHurt;
 
-        // Closing distance — always pursue unless already in strike range
         if (canMove) {
             if (dist > idealDist + deadzone) {
                 if (botCX < tarCX) bot.moveRight(); else bot.moveLeft();
@@ -599,7 +596,6 @@ public class GamePanel extends JPanel implements ActionListener, KeyListener {
         }
         bot.setBlockHeld(blkTimer > 0 && (incoming || windup));
 
-        // Punish hurt opponent
         if (target.isHurt && dist <= range + 40 && atkCool == 0 && !bot.isBlocking && canMove) {
             if (diff >= 1 || rand.nextInt(100) < 55) {
                 bot.heavyAttack();
@@ -607,7 +603,6 @@ public class GamePanel extends JPanel implements ActionListener, KeyListener {
             }
         }
 
-        // Main attack logic
         if (dist <= range && atkCool == 0 && !bot.isBlocking && canMove) {
             boolean preferHeavy = dist < range * 0.78f
                     || target.isBlocking
@@ -622,7 +617,6 @@ public class GamePanel extends JPanel implements ActionListener, KeyListener {
             }
         }
 
-        // Special — use when close, enemy weak, or after opening
         float tarHp = (float) target.currentHealth / target.maxHealth;
         if (bot.specialReady() && specCool == 0 && !bot.isBlocking && canMove) {
             boolean moment = dist <= range + 90
@@ -635,7 +629,6 @@ public class GamePanel extends JPanel implements ActionListener, KeyListener {
             }
         }
 
-        // Vertical play — chase platforms and jump-ins
         int heightDiff = bot.y - target.y;
         if (heightDiff > 70 && jmpCool == 0 && diff >= 1) {
             bot.jump();
@@ -655,7 +648,6 @@ public class GamePanel extends JPanel implements ActionListener, KeyListener {
             jmpCool = jumpCooldownBase[diff] + rand.nextInt(18);
         }
 
-        // Hard+ — sustained pressure and counter-attacks
         if (diff >= 2 && canMove) {
             if (dist <= range + 25 && atkCool == 0 && rand.nextInt(100) < pressureChance[diff]) {
                 bot.lightAttack();
@@ -667,7 +659,6 @@ public class GamePanel extends JPanel implements ActionListener, KeyListener {
             }
         }
 
-        // Nightmare — relentless offense and defense
         if (diff == 3) {
             if (dist > 50 && canMove) {
                 if (botCX < tarCX) bot.moveRight(); else bot.moveLeft();
@@ -796,19 +787,19 @@ public class GamePanel extends JPanel implements ActionListener, KeyListener {
                     flashes.add(new ScreenFlash(new Color(180,210,255,30),5));
                 }
                 break;
-            case 7: // GCI — scanlines & alert flashes
+            case 7:
                 if(tick%4==0) particles.add(new Particle(rand.nextInt(WORLD_W),rand.nextInt(400),
                     (rand.nextFloat()-0.5f)*0.5f, rand.nextFloat()*2+0.5f,
                     new Color(0,200,255,80+rand.nextInt(60)), 25+rand.nextInt(20)));
                 if(rand.nextInt(200)==0) flashes.add(new ScreenFlash(new Color(0,180,255,35),6));
                 break;
-            case 8: // Moon — drifting dust in low gravity
+            case 8:
                 if(rand.nextInt(40)==0) spaceDebris.add(new SpaceDebris(WORLD_W+10, 80+rand.nextInt(380)));
                 if(tick%6==0) particles.add(new Particle(rand.nextInt(WORLD_W),GROUND_Y+120,
                     (rand.nextFloat()-0.5f)*1.2f, -rand.nextFloat()*1.5f-0.2f,
                     new Color(180,185,200,100+rand.nextInt(80)), 35+rand.nextInt(25)));
                 break;
-            case 9: // Blood plains — ash, embers, war meteors
+            case 9:
                 if(tick%2==0) particles.add(new Particle(rand.nextInt(WORLD_W),-8,
                     (rand.nextFloat()-0.4f)*2, rand.nextFloat()*4+1,
                     rand.nextInt(3)==0?new Color(200,0,0,150):new Color(80,0,0,120), 45+rand.nextInt(30)));
@@ -857,7 +848,6 @@ public class GamePanel extends JPanel implements ActionListener, KeyListener {
         g.setTransform(screenBase);
 
         for (ScreenFlash f : flashes) f.draw(g, W, H);
-        // *** Pass actual panel W and H — not the hardcoded VIEW_W/VIEW_H ***
         if (p1 != null && p2 != null) drawHUD(g, W, H);
         if (roundOver) drawRoundOverlay(g, W, H);
         if (gameOver)  drawGameOverOverlay(g, W, H);
@@ -1145,18 +1135,15 @@ public class GamePanel extends JPanel implements ActionListener, KeyListener {
     // ── HUD ───────────────────────────────────────────────────────────────────
 
     private void drawHUD(Graphics2D g, int W, int H) {
-        // All positions relative to actual panel width W — never hardcoded
         int margin   = 20;
-        int timerW   = 80;   // reserved width either side of centre for the timer
+        int timerW   = 80;
         int barWidth = W / 2 - margin - timerW;
         int barY1    = 14;
         int barH1    = 28;
         int barY2    = barY1 + barH1 + 4;
         int barH2    = 18;
 
-        // P1: left edge at margin, grows right
         hb1.reposition(margin, barY1, barWidth);
-        // P2: right edge at W-margin, grows left
         hb2.reposition(W / 2 + timerW, barY1, barWidth);
 
         hb1.draw(g, p1.currentHealth, p1.maxHealth);
@@ -1169,7 +1156,6 @@ public class GamePanel extends JPanel implements ActionListener, KeyListener {
             hb2b.draw(g, p2b.currentHealth, p2b.maxHealth);
         }
 
-        // Timer — centred between the two bars
         g.setFont(new Font("Impact", Font.PLAIN, 46));
         String ts = String.valueOf(roundTimer);
         FontMetrics fm = g.getFontMetrics();
@@ -1182,7 +1168,6 @@ public class GamePanel extends JPanel implements ActionListener, KeyListener {
         g.setColor(new Color(0, 0, 0, 150)); g.drawString(ts, tx + 2, barY1 + 40);
         g.setColor(tc);                       g.drawString(ts, tx,     barY1 + 40);
 
-        // Stage name fade-in
         if (tick < 180) {
             float a = Math.min(1f, (180 - tick) / 60f);
             String[] sn = {"CITY UNDER SIEGE","THE VOID OF SPACE","STORM'S WRATH",
@@ -1194,7 +1179,6 @@ public class GamePanel extends JPanel implements ActionListener, KeyListener {
             g.drawString(sn[currentStage], W / 2 - fm.stringWidth(sn[currentStage]) / 2, H / 2);
         }
 
-        // Win pips — above each bar
         int pipY = barY1 - 2;
         for (int i = 0; i < 2; i++) {
             int px = margin + i * 22;
@@ -1207,7 +1191,6 @@ public class GamePanel extends JPanel implements ActionListener, KeyListener {
             else             { g.setColor(new Color(60,60,60));  g.drawOval(px, pipY, 16, 16); }
         }
 
-        // Block labels
         int infoY = barY1 + barH1 + (gameMode==1||gameMode==3 ? barH2 + 10 : 8);
         if (p1 != null && p1.isBlocking) {
             g.setFont(new Font("Arial", Font.BOLD, 12));
@@ -1221,7 +1204,6 @@ public class GamePanel extends JPanel implements ActionListener, KeyListener {
             g.drawString("BLOCKING", W - margin - fm.stringWidth("BLOCKING"), infoY + 14);
         }
 
-        // Controls hint
         g.setFont(new Font("Arial", Font.PLAIN, 10));
         g.setColor(new Color(255, 255, 255, 55));
         if (gameMode == 0 || gameMode == 2) {
@@ -1238,7 +1220,6 @@ public class GamePanel extends JPanel implements ActionListener, KeyListener {
             g.drawString("P4: NP4568+790",   W - 170, infoY + 42);
         }
 
-        // Bot difficulty badge
         if (gameMode == 2 || gameMode == 3) {
             String[] dn = {"EASY","MEDIUM","HARD","NIGHTMARE"};
             Color[]  dc = {new Color(80,200,80),new Color(255,200,50),new Color(255,100,50),new Color(200,0,255)};
