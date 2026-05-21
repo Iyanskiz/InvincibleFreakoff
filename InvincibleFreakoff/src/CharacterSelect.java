@@ -493,11 +493,13 @@ public class CharacterSelect extends JPanel implements KeyListener, ActionListen
         }
         repaint();
     }
+    
     @Override public void keyReleased(KeyEvent e){}
     @Override public void keyTyped(KeyEvent e){}
 
     private void startFight(){
         animTimer.stop();
+        MainMenu.stopMusic();
         GamePanel gp=new GamePanel(p1Selections,p2Selections,gameMode,botSelections,botDifficulty);
         parentFrame.setContentPane(gp);
         parentFrame.revalidate();
