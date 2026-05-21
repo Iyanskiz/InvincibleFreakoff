@@ -6,7 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 import java.net.URL;
-import javax.sound.sampled.*; // Added for audio support
+import javax.sound.sampled.*;
 
 public class MainMenu extends JPanel implements ActionListener, KeyListener {
 
@@ -18,11 +18,12 @@ public class MainMenu extends JPanel implements ActionListener, KeyListener {
     private List<MenuParticle> particles = new ArrayList<>();
     private List<float[]> stars = new ArrayList<>();
 
-    // --- STATIC AUDIO & STATE ---
+    // --- STATIC AUDIO ENGINE ---
+    private static Clip currentClip;
+    private static String currentTrackPath = "";
     private static boolean firstTimeLaunch = true; 
     private boolean showingTitleScreen;
     private Image titleGif;
-    private static Clip currentClip; // Static to allow stopping from other classes
     // ----------------------------
 
     private static final String[] OPTIONS      = {"1  VS  1", "2  VS  2", "1  VS  BOT", "2  VS  2 BOT"};
@@ -43,16 +44,12 @@ public class MainMenu extends JPanel implements ActionListener, KeyListener {
         this.parentFrame = frame;
         setFocusable(true);
         addKeyListener(this);
-        
         this.showingTitleScreen = firstTimeLaunch;
 
-        // Load Title GIF
         URL imgUrl = getClass().getResource("/imgs/titlecard.gif");
-        if (imgUrl != null) {
-            titleGif = new ImageIcon(imgUrl).getImage();
-        }
+        if (imgUrl != null) titleGif = new ImageIcon(imgUrl).getImage();
 
-        // Play Title Music on launch
+        // If it's the very first open, play the Title Music
         if (showingTitleScreen) {
             playMusic("/sounds/title.wav", true);
         }
@@ -64,10 +61,15 @@ public class MainMenu extends JPanel implements ActionListener, KeyListener {
         animTimer.start();
     }
 
-    // --- STATIC AUDIO HANDLERS ---
+    // --- SMART AUDIO CONTROL ---
     public static void playMusic(String path, boolean loop) {
+        // Prevent restarting the song if it is already playing
+        if (path.equals(currentTrackPath) && currentClip != null && currentClip.isRunning()) {
+            return; 
+        }
+
         try {
-            stopMusic(); // Close previous clip before starting a new one
+            stopMusic(); 
             URL url = MainMenu.class.getResource(path);
             if (url != null) {
                 AudioInputStream audioIn = AudioSystem.getAudioInputStream(url);
@@ -75,6 +77,7 @@ public class MainMenu extends JPanel implements ActionListener, KeyListener {
                 currentClip.open(audioIn);
                 if (loop) currentClip.loop(Clip.LOOP_CONTINUOUSLY);
                 currentClip.start();
+                currentTrackPath = path;
             }
         } catch (Exception e) {
             System.err.println("Audio Error: " + e.getMessage());
@@ -83,9 +86,10 @@ public class MainMenu extends JPanel implements ActionListener, KeyListener {
 
     public static void stopMusic() {
         if (currentClip != null) {
-            if (currentClip.isRunning()) currentClip.stop();
+            currentClip.stop();
             currentClip.close();
             currentClip = null;
+            currentTrackPath = "";
         }
     }
 
@@ -107,17 +111,11 @@ public class MainMenu extends JPanel implements ActionListener, KeyListener {
         int W = getWidth(), H = getHeight();
 
         if (showingTitleScreen) {
-            if (titleGif != null) {
-                g.drawImage(titleGif, 0, 0, W, H, this);
-            } else {
-                g.setColor(Color.BLACK);
-                g.fillRect(0, 0, W, H);
-            }
+            if (titleGif != null) g.drawImage(titleGif, 0, 0, W, H, this);
             return; 
         }
 
         g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-        g.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
         drawBackground(g, W, H);
         drawTitle(g, W, H);
         drawOptions(g, W, H);
@@ -126,70 +124,44 @@ public class MainMenu extends JPanel implements ActionListener, KeyListener {
 
     private void drawBackground(Graphics2D g, int W, int H) {
         if (W <= 0 || H <= 0) return;
-        GradientPaint bg = new GradientPaint(0,0,new Color(4,4,18),W,H,new Color(12,0,28));
-        g.setPaint(bg); g.fillRect(0,0,W,H);
+        g.setPaint(new GradientPaint(0,0,new Color(4,4,18),W,H,new Color(12,0,28)));
+        g.fillRect(0,0,W,H);
         for (float[] star : stars) {
             float tw = (float)(Math.sin(tick*0.04+star[0]*0.01)*0.3+0.7);
             int br = Math.min(255,(int)(tw*(100+star[2]*55)));
             g.setColor(new Color(br,br,Math.min(255,br+30)));
-            int sz = star[2] > 2 ? 2 : 1;
-            g.fillOval((int)(star[0] % W),(int)(star[1] % H), sz, sz);
+            g.fillOval((int)(star[0] % W),(int)(star[1] % H), star[2] > 2 ? 2 : 1, star[2] > 2 ? 2 : 1);
         }
         for (MenuParticle p : particles) p.draw(g);
-        
-        g.setColor(new Color(5,4,12));
-        int bCount = Math.max(2, W / 50 + 2);
-        int[] bx = new int[bCount * 2 + 2]; int[] by = new int[bCount * 2 + 2];
-        bx[0] = 0; by[0] = H;
-        for (int i = 0; i < bCount; i++) {
-            int wx  = i * W / (bCount - 1);
-            int ht  = (int)(H * 0.62f - Math.sin(i * 0.9 + 0.3) * H * 0.08f - Math.sin(i * 2.3) * H * 0.03f);
-            int wx2 = Math.min((i + 1) * W / (bCount - 1), W);
-            bx[i*2+1] = wx;  by[i*2+1] = ht; bx[i*2+2] = wx2; by[i*2+2] = ht;
-        }
-        bx[bCount*2+1] = W; by[bCount*2+1] = H;
-        g.fillPolygon(bx, by, bCount*2+2);
     }
 
     private void drawTitle(Graphics2D g, int W, int H) {
         int titleSize = Math.min(120, W / 10);
         g.setFont(new Font("Impact", Font.PLAIN, titleSize));
-        FontMetrics fm = g.getFontMetrics();
         String l1 = "INVINCIBLE", l2 = "SHOWDOWNS";
-        int l1w = fm.stringWidth(l1), l2w = fm.stringWidth(l2);
-        int titleY1 = (int)(H * 0.18f), titleY2 = (int)(H * 0.18f) + titleSize + 4;
+        int tY1 = (int)(H * 0.18f), tY2 = tY1 + titleSize + 4;
         g.setColor(new Color(0,0,0,200));
-        g.drawString(l1, W/2 - l1w/2 + 4, titleY1 + 4);
-        g.drawString(l2, W/2 - l2w/2 + 4, titleY2 + 4);
-        g.setPaint(new GradientPaint(0, titleY1-titleSize, new Color(255,240,80), 0, titleY1, new Color(255,140,0)));
-        g.drawString(l1, W/2 - l1w/2, titleY1);
-        g.setPaint(new GradientPaint(0, titleY2-titleSize, new Color(255,80,50), 0, titleY2, new Color(200,0,0)));
-        g.drawString(l2, W/2 - l2w/2, titleY2);
+        g.drawString(l1, W/2 - g.getFontMetrics().stringWidth(l1)/2 + 4, tY1 + 4);
+        g.drawString(l2, W/2 - g.getFontMetrics().stringWidth(l2)/2 + 4, tY2 + 4);
+        g.setPaint(new GradientPaint(0, tY1-titleSize, new Color(255,240,80), 0, tY1, new Color(255,140,0)));
+        g.drawString(l1, W/2 - g.getFontMetrics().stringWidth(l1)/2, tY1);
+        g.setPaint(new GradientPaint(0, tY2-titleSize, new Color(255,80,50), 0, tY2, new Color(200,0,0)));
+        g.drawString(l2, W/2 - g.getFontMetrics().stringWidth(l2)/2, tY2);
     }
 
     private void drawOptions(Graphics2D g, int W, int H) {
-        int hintSize = Math.max(11, W/120);
-        g.setFont(new Font("Arial", Font.BOLD, hintSize));
-        g.setColor(new Color(255,255,255,90));
-        String nav = "W/S  or  ↑↓  to navigate    ENTER or F to select";
-        g.drawString(nav, W/2 - g.getFontMetrics().stringWidth(nav)/2, (int)(H * 0.46f));
+        int cardY = (int)(H * 0.49f), cardH = (int)(H * 0.30f);
         int margin = (int)(W * 0.04f), gap = (int)(W * 0.015f);
-        int cardW = (W - margin*2 - gap*3) / 4, cardH = (int)(H * 0.30f), cardY = (int)(H * 0.49f);
-        for (int i = 0; i < 4; i++) drawCard(g, i, margin + i*(cardW+gap), cardY, cardW, cardH);
-    }
-
-    private void drawCard(Graphics2D g, int index, int cx, int cy, int cw, int ch) {
-        boolean sel = (index == selectedOption); Color col = OPTION_COLORS[index];
-        g.setColor(new Color(0,0,0,100)); g.fillRoundRect(cx+4, cy+4, cw, ch, 18, 18);
-        g.setPaint(new GradientPaint(cx, cy, new Color(col.getRed()/7, col.getGreen()/7, col.getBlue()/7, 220), cx, cy+ch, new Color(4,4,12,220)));
-        g.fillRoundRect(cx, cy, cw, ch, 18, 18);
-        if (sel) {
-            g.setColor(col); g.setStroke(new BasicStroke(3));
-            g.drawRoundRect(cx, cy, cw, ch, 18, 18);
+        int cardW = (W - margin*2 - gap*3) / 4;
+        for (int i = 0; i < 4; i++) {
+            boolean sel = (i == selectedOption); Color col = OPTION_COLORS[i];
+            g.setPaint(new GradientPaint(margin + i*(cardW+gap), cardY, new Color(col.getRed()/7, col.getGreen()/7, col.getBlue()/7, 220), margin + i*(cardW+gap), cardY+cardH, new Color(4,4,12,220)));
+            g.fillRoundRect(margin + i*(cardW+gap), cardY, cardW, cardH, 18, 18);
+            if (sel) { g.setColor(col); g.setStroke(new BasicStroke(3)); g.drawRoundRect(margin + i*(cardW+gap), cardY, cardW, cardH, 18, 18); }
+            g.setFont(new Font("Impact", Font.PLAIN, Math.max(18, cardW / 7)));
+            g.setColor(sel ? col : new Color(150,150,160));
+            g.drawString(OPTIONS[i], margin + i*(cardW+gap) + (cardW-g.getFontMetrics().stringWidth(OPTIONS[i]))/2, cardY + cardH/2);
         }
-        g.setFont(new Font("Impact", Font.PLAIN, sel ? Math.max(18, cw / 7)+4 : Math.max(18, cw / 7)));
-        g.setColor(sel ? col : new Color(150,150,160));
-        g.drawString(OPTIONS[index], cx + (cw-g.getFontMetrics().stringWidth(OPTIONS[index]))/2, cy + ch/2);
     }
 
     private void drawFooter(Graphics2D g, int W, int H) {
@@ -204,9 +176,8 @@ public class MainMenu extends JPanel implements ActionListener, KeyListener {
         int c = e.getKeyCode();
         if (showingTitleScreen) {
             if (c == KeyEvent.VK_ENTER) {
-                // Transition music IMMEDIATELY upon leaving title screen
-                playMusic("/sounds/char_select.wav", true); 
-                
+                // START MAIN MUSIC (for Mode Select & Char Select)
+                playMusic("/sounds/char_select.wav", true);
                 showingTitleScreen = false;
                 firstTimeLaunch = false;
                 repaint();
@@ -221,7 +192,6 @@ public class MainMenu extends JPanel implements ActionListener, KeyListener {
 
     private void launchMode() {
         animTimer.stop();
-        // char_select.wav is already playing, so we just switch panels
         CharacterSelect cs = new CharacterSelect(parentFrame, selectedOption);
         parentFrame.setContentPane(cs);
         parentFrame.revalidate();
@@ -229,14 +199,15 @@ public class MainMenu extends JPanel implements ActionListener, KeyListener {
     }
 
     @Override public void keyReleased(KeyEvent e) {}
-    @Override public void keyTyped(KeyEvent e)    {}
+    @Override public void keyTyped(KeyEvent e) {}
 
     static class MenuParticle {
         float x, y, vx, vy, size; Color color; int life, maxLife;
         MenuParticle(float x, float y) {
             Random r = new Random(); this.x = x; this.y = y;
             vx = (r.nextFloat()-0.5f)*1.8f; vy = -(r.nextFloat()*2.5f+0.5f); size = r.nextFloat()*4+2;
-            color = new Color(255, 150 + r.nextInt(50), 0); maxLife = 90+r.nextInt(70); life = maxLife;
+            Color[] cols = {new Color(255,150,0),new Color(255,220,50),new Color(200,50,50)};
+            color = cols[r.nextInt(cols.length)]; maxLife = 90+r.nextInt(70); life = maxLife;
         }
         void update() { x+=vx; y+=vy; life--; size*=0.995f; }
         void draw(Graphics2D g) {

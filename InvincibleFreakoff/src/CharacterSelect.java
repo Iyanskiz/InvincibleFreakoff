@@ -67,18 +67,23 @@ public class CharacterSelect extends JPanel implements KeyListener, ActionListen
     private BufferedImage[] previewImages = new BufferedImage[NUM_CHARS];
 
     public CharacterSelect(JFrame frame, int gameMode) {
+        // --- ENSURE MUSIC IS PLAYING ---
+        // If coming from Menu, it continues. If coming from Fight, it restarts.
+        MainMenu.playMusic("/sounds/char_select.wav", true);
+        
         this.parentFrame = frame;
-        this.gameMode    = gameMode;
-        int slots = (gameMode==1||gameMode==3)?2:1;
-        p1Confirmed  = new boolean[slots];
-        p2Confirmed  = new boolean[slots];
+        this.gameMode = gameMode;
+
+        int slots = (gameMode == 1 || gameMode == 3) ? 2 : 1;
+        p1Confirmed = new boolean[slots];
+        p2Confirmed = new boolean[slots];
         botConfirmed = new boolean[slots];
-        // Bot modes start at difficulty phase
-        phase = (gameMode==2||gameMode==3) ? 0 : 1;
+
+        if (gameMode == 2 || gameMode == 3) phase = 0; else phase = 1;
+
         setFocusable(true);
         addKeyListener(this);
-        loadPreviews();
-        animTimer=new javax.swing.Timer(16,this);
+        animTimer = new javax.swing.Timer(16, this);
         animTimer.start();
     }
 
