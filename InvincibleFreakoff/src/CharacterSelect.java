@@ -18,14 +18,13 @@ public class CharacterSelect extends JPanel implements KeyListener, ActionListen
     private int p1Cursor=0, p2Cursor=2;
 
     // Bot settings
-    private int   botDifficulty   = 1; // 0=Easy,1=Medium,2=Hard,3=Nightmare
+    private int   botDifficulty   = 1;
     private int[] botSelections   = {2, 3};
     private boolean[] botConfirmed;
     private int botSlot=0, botCursor=2;
     private boolean selectingDifficulty = false;
     private boolean difficultyDone = false;
 
-    // Phase: 0=picking difficulty (bot modes), 1=picking characters
     private int phase = 0;
 
     private javax.swing.Timer animTimer;
@@ -42,7 +41,7 @@ public class CharacterSelect extends JPanel implements KeyListener, ActionListen
         new Color(100,0,0),
         new Color(60,60,80),
         new Color(140,30,180),
-        new Color(30,90,200)       // TechJacket suit blue
+        new Color(30,90,200)
     };
     private static final Color[]  ACCENTS   = {
         new Color(180,255,120),
@@ -50,7 +49,7 @@ public class CharacterSelect extends JPanel implements KeyListener, ActionListen
         new Color(180,140,0),
         new Color(200,50,50),
         new Color(220,180,255),
-        new Color(0,220,255)       // TechJacket cyan glow
+        new Color(0,220,255)
     };
     private static final int[]    STAT_PWR  = {100, 90, 95, 88, 92, 85};
     private static final int[]    STAT_SPD  = { 95, 85, 70, 75, 82, 80};
@@ -67,34 +66,24 @@ public class CharacterSelect extends JPanel implements KeyListener, ActionListen
     private BufferedImage[] previewImages = new BufferedImage[NUM_CHARS];
 
     public CharacterSelect(JFrame frame, int gameMode) {
-        // --- ENSURE MUSIC IS PLAYING ---
-        // If coming from Menu, it continues. If coming from Fight, it restarts.
-        MainMenu.playMusic("/sounds/char_select.wav", true);
-        
         this.parentFrame = frame;
-        this.gameMode = gameMode;
-
-        int slots = (gameMode == 1 || gameMode == 3) ? 2 : 1;
-        p1Confirmed = new boolean[slots];
-        p2Confirmed = new boolean[slots];
+        this.gameMode    = gameMode;
+        int slots = (gameMode==1||gameMode==3)?2:1;
+        p1Confirmed  = new boolean[slots];
+        p2Confirmed  = new boolean[slots];
         botConfirmed = new boolean[slots];
-
-        if (gameMode == 2 || gameMode == 3) phase = 0; else phase = 1;
-
+        phase = (gameMode==2||gameMode==3) ? 0 : 1;
         setFocusable(true);
         addKeyListener(this);
-        animTimer = new javax.swing.Timer(16, this);
+        loadPreviews();
+        animTimer=new javax.swing.Timer(16,this);
         animTimer.start();
     }
 
     private void loadPreviews(){
         String[] files={
-            "InvincibleLevitating.png",
-            "OmniLevitating.png",
-            "ThaggLevitating.png",
-            "ConquestLevitating.png",
-            "AnissaLevitating.png",
-            "TechLevitating.png"
+            "InvincibleLevitating.png","OmniLevitating.png","ThaggLevitating.png",
+            "ConquestLevitating.png","AnissaLevitating.png","TechLevitating.png"
         };
         String[] paths={"imgs/","src/imgs/","../imgs/",""};
         for(int i=0;i<files.length;i++) for(String b:paths){
@@ -113,144 +102,141 @@ public class CharacterSelect extends JPanel implements KeyListener, ActionListen
         g.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING,RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
         g.setRenderingHint(RenderingHints.KEY_INTERPOLATION,RenderingHints.VALUE_INTERPOLATION_BILINEAR);
         int W=getWidth(),H=getHeight();
-        // Background
-        g.setColor(new Color(6,6,14)); g.fillRect(0,0,W,H);
-        g.setColor(new Color(255,60,60,12));
-        for(int i=0;i<W;i+=55) g.drawLine(i,0,i,H);
-        for(int i=0;i<H;i+=55) g.drawLine(0,i,W,i);
+
+        g.setColor(new Color(4,4,10)); g.fillRect(0,0,W,H);
+        g.setColor(new Color(255,80,80,7));
+        for(int i=0;i<W;i+=70) g.drawLine(i,0,i,H);
+        for(int i=0;i<H;i+=70) g.drawLine(0,i,W,i);
         RadialGradientPaint r=new RadialGradientPaint(W/2f,H/2f,W*0.55f,
-            new float[]{0f,1f},new Color[]{new Color(160,0,0,30),new Color(0,0,0,0)});
+            new float[]{0f,1f},new Color[]{new Color(180,0,0,22),new Color(0,0,0,0)});
         g.setPaint(r); g.fillRect(0,0,W,H);
 
         if(phase==0) drawDifficultyPhase(g,W,H);
         else         drawCharacterPhase(g,W,H);
     }
 
-    // ── Phase 0: Difficulty selection ─────────────────────────────────────────
+    // ── Phase 0: Difficulty ───────────────────────────────────────────────────
 
     private void drawDifficultyPhase(Graphics2D g, int W, int H){
         botDifficulty = Math.min(3, Math.max(0, botDifficulty));
-        // Title
-        g.setFont(new Font("Impact",Font.PLAIN,48));
+        g.setFont(new Font("Impact",Font.PLAIN,52));
         FontMetrics fm=g.getFontMetrics();
         String t="SELECT DIFFICULTY";
-        g.setColor(new Color(0,0,0,180)); g.drawString(t,W/2-fm.stringWidth(t)/2+3,63);
-        GradientPaint gp=new GradientPaint(0,25,new Color(255,220,50),0,63,new Color(255,60,0));
-        g.setPaint(gp); g.drawString(t,W/2-fm.stringWidth(t)/2,61);
+        g.setColor(new Color(0,0,0,200)); g.drawString(t,W/2-fm.stringWidth(t)/2+3,68);
+        GradientPaint gp=new GradientPaint(0,28,new Color(255,225,60),0,68,new Color(255,55,0));
+        g.setPaint(gp); g.drawString(t,W/2-fm.stringWidth(t)/2,66);
 
-        // Mode badge
         String badge=gameMode==2?"1 VS BOT":"2 VS 2 BOT";
-        g.setFont(new Font("Arial",Font.BOLD,13)); fm=g.getFontMetrics();
-        g.setColor(new Color(200,80,255,60)); g.fillRoundRect(W/2-fm.stringWidth(badge)/2-10,72,fm.stringWidth(badge)+20,20,8,8);
-        g.setColor(new Color(200,80,255)); g.setStroke(new BasicStroke(1.5f));
-        g.drawRoundRect(W/2-fm.stringWidth(badge)/2-10,72,fm.stringWidth(badge)+20,20,8,8);
-        g.setStroke(new BasicStroke(1));
-        g.drawString(badge,W/2-fm.stringWidth(badge)/2,86);
+        g.setFont(new Font("Arial",Font.BOLD,14)); fm=g.getFontMetrics();
+        int bw=fm.stringWidth(badge)+24, bh=24, bx=W/2-bw/2, by=78;
+        g.setColor(new Color(180,60,255,50)); g.fillRoundRect(bx,by,bw,bh,10,10);
+        g.setColor(new Color(200,100,255,200)); g.setStroke(new BasicStroke(1.5f));
+        g.drawRoundRect(bx,by,bw,bh,10,10); g.setStroke(new BasicStroke(1));
+        g.setColor(new Color(230,180,255)); g.drawString(badge,W/2-fm.stringWidth(badge)/2,by+16);
 
-        // Nav hint
         g.setFont(new Font("Arial",Font.BOLD,13)); fm=g.getFontMetrics();
-        g.setColor(new Color(255,255,255,80));
+        g.setColor(new Color(255,255,255,120));
         String nav="← → or A/D to select   |   ENTER or F to confirm";
-        g.drawString(nav,W/2-fm.stringWidth(nav)/2,108);
+        g.drawString(nav,W/2-fm.stringWidth(nav)/2,117);
 
-        // Difficulty cards
-        int cw=240,ch=160,gap=28;
-        int totalW=4*cw+3*gap;
-        int sx=(W-totalW)/2, sy=130;
+        int cw=248,ch=172,gap=32, totalW=4*cw+3*gap, sx=(W-totalW)/2, sy=136;
         for(int i=0;i<4;i++) drawDiffCard(g,i,sx+i*(cw+gap),sy,cw,ch);
 
-        // Description
-        g.setFont(new Font("Arial",Font.ITALIC,16)); fm=g.getFontMetrics();
-        g.setColor(new Color(220,220,220,200));
-        g.drawString(DIFF_DESC[botDifficulty],W/2-fm.stringWidth(DIFF_DESC[botDifficulty])/2,sy+ch+35);
-
-        // Bot character selection (below difficulty)
-        drawBotCharSelect(g,W,sy+ch+65,H);
+        g.setFont(new Font("Arial",Font.ITALIC,15)); fm=g.getFontMetrics();
+        g.setColor(new Color(240,240,240,210));
+        String desc=DIFF_DESC[botDifficulty];
+        g.drawString(desc,W/2-fm.stringWidth(desc)/2,sy+ch+42);
+        drawBotCharSelect(g,W,sy+ch+62,H);
     }
 
     private void drawDiffCard(Graphics2D g,int index,int cx,int cy,int cw,int ch){
         boolean sel=(index==botDifficulty);
         Color col=DIFF_COLORS[index];
         float pulse=(float)(Math.sin(tick*0.08)*0.5+0.5);
-        g.setColor(new Color(0,0,0,100)); g.fillRoundRect(cx+3,cy+3,cw,ch,14,14);
+        g.setColor(new Color(0,0,0,120)); g.fillRoundRect(cx+4,cy+4,cw,ch,14,14);
         GradientPaint bg=new GradientPaint(cx,cy,
-            new Color(col.getRed()/7,col.getGreen()/7,col.getBlue()/7,210),cx,cy+ch,new Color(4,4,12,210));
+            new Color(col.getRed()/6,col.getGreen()/6,col.getBlue()/6,230),
+            cx,cy+ch,new Color(6,6,16,230));
         g.setPaint(bg); g.fillRoundRect(cx,cy,cw,ch,14,14);
         if(sel){
-            int a=Math.max(0,Math.min(255,(int)(135+120*pulse)));
+            int a=Math.max(0,Math.min(255,(int)(150+105*pulse)));
             g.setColor(new Color(col.getRed(),col.getGreen(),col.getBlue(),a));
             g.setStroke(new BasicStroke(3));
-        } else {g.setColor(new Color(55,55,75,180)); g.setStroke(new BasicStroke(1.5f));}
+        } else { g.setColor(new Color(70,70,90,200)); g.setStroke(new BasicStroke(1.5f)); }
         g.drawRoundRect(cx,cy,cw,ch,14,14); g.setStroke(new BasicStroke(1));
         String[] icons={"😊","⚔","🔥","💀"};
-        g.setFont(new Font("Segoe UI Emoji",Font.PLAIN,sel?32:26));
+        g.setFont(new Font("Segoe UI Emoji",Font.PLAIN,sel?36:28));
         FontMetrics fm=g.getFontMetrics();
-        g.setColor(col); g.drawString(icons[index],cx+(cw-fm.stringWidth(icons[index]))/2,cy+46);
-        g.setFont(new Font("Impact",Font.PLAIN,sel?28:22)); fm=g.getFontMetrics();
-        if(sel){GradientPaint tp=new GradientPaint(cx,cy+50,col,cx,cy+80,col.darker());g.setPaint(tp);}
-        else g.setColor(new Color(160,160,160));
-        g.drawString(DIFF_NAMES[index],cx+(cw-fm.stringWidth(DIFF_NAMES[index]))/2,cy+80);
-        if(sel){g.setFont(new Font("Arial",Font.BOLD,10));fm=g.getFontMetrics();
-            g.setColor(new Color(col.getRed(),col.getGreen(),col.getBlue(),160));
-            g.drawString("SELECTED",cx+(cw-fm.stringWidth("SELECTED"))/2,cy+100);}
-        if(sel){g.setColor(col);g.fillPolygon(new int[]{cx+cw/2-7,cx+cw/2+7,cx+cw/2},new int[]{cy+ch+6,cy+ch+6,cy+ch+13},3);}
+        g.setColor(col); g.drawString(icons[index],cx+(cw-fm.stringWidth(icons[index]))/2,cy+50);
+        g.setFont(new Font("Impact",Font.PLAIN,sel?30:24)); fm=g.getFontMetrics();
+        if(sel){GradientPaint tp=new GradientPaint(cx,cy+56,col,cx,cy+88,col.darker());g.setPaint(tp);}
+        else g.setColor(new Color(180,180,180));
+        g.drawString(DIFF_NAMES[index],cx+(cw-fm.stringWidth(DIFF_NAMES[index]))/2,cy+88);
+        if(sel){
+            g.setFont(new Font("Arial",Font.BOLD,11)); fm=g.getFontMetrics();
+            g.setColor(new Color(col.getRed(),col.getGreen(),col.getBlue(),200));
+            g.drawString("SELECTED",cx+(cw-fm.stringWidth("SELECTED"))/2,cy+108);
+            g.setColor(col);
+            g.fillPolygon(new int[]{cx+cw/2-8,cx+cw/2+8,cx+cw/2},new int[]{cy+ch+7,cy+ch+7,cy+ch+16},3);
+        }
     }
 
     private void drawBotCharSelect(Graphics2D g,int W,int y,int H){
         int slots=(gameMode==3)?2:1;
-        // Header
-        g.setFont(new Font("Impact",Font.PLAIN,22)); FontMetrics fm=g.getFontMetrics();
-        g.setColor(new Color(255,255,255,150));
+        g.setFont(new Font("Impact",Font.PLAIN,24)); FontMetrics fm=g.getFontMetrics();
+        g.setColor(new Color(255,255,255,200));
         String hdr="SELECT BOT CHARACTER"+(slots>1?"S":"");
-        g.drawString(hdr,W/2-fm.stringWidth(hdr)/2,y+22);
-
-        int cw=160,ch=90,gap=12,totalW=NUM_CHARS*cw+(NUM_CHARS-1)*gap,sx=(W-totalW)/2;
+        g.drawString(hdr,W/2-fm.stringWidth(hdr)/2,y+26);
+        int cw=170,ch=100,gap=14,totalW=NUM_CHARS*cw+(NUM_CHARS-1)*gap,sx=(W-totalW)/2;
         for(int i=0;i<NUM_CHARS;i++){
-            int cx=sx+i*(cw+gap),cy=y+30;
+            int cx=sx+i*(cw+gap),cy=y+36;
             boolean sel=(botCursor==i);
             boolean conf0=(slots>=1&&botSelections[0]==i&&botConfirmed[0]);
             boolean conf1=(slots>=2&&botSelections[1]==i&&botConfirmed[1]);
             Color col=COLORS[i],acc=ACCENTS[i];
             float pulse=(float)(Math.sin(tick*0.08)*0.5+0.5);
-            g.setColor(new Color(0,0,0,90)); g.fillRoundRect(cx+2,cy+2,cw,ch,10,10);
-            GradientPaint bg=new GradientPaint(cx,cy,new Color(col.getRed()/7,col.getGreen()/7,col.getBlue()/7,200),cx,cy+ch,new Color(4,4,12,200));
+            g.setColor(new Color(0,0,0,100)); g.fillRoundRect(cx+2,cy+2,cw,ch,10,10);
+            GradientPaint bg=new GradientPaint(cx,cy,
+                new Color(col.getRed()/5,col.getGreen()/5,col.getBlue()/5,220),
+                cx,cy+ch,new Color(6,6,16,220));
             g.setPaint(bg); g.fillRoundRect(cx,cy,cw,ch,10,10);
-            Color bc=sel?new Color(acc.getRed(),acc.getGreen(),acc.getBlue(),Math.max(0,Math.min(255,(int)(130+125*pulse)))):new Color(50,50,68,170);
-            g.setColor(bc); g.setStroke(new BasicStroke(sel?2.5f:1.2f));
+            int borderAlpha=sel?Math.max(0,Math.min(255,(int)(145+110*pulse))):80;
+            g.setColor(sel?new Color(acc.getRed(),acc.getGreen(),acc.getBlue(),borderAlpha):new Color(70,70,90,180));
+            g.setStroke(new BasicStroke(sel?2.5f:1.2f));
             g.drawRoundRect(cx,cy,cw,ch,10,10); g.setStroke(new BasicStroke(1));
-            // Mini preview
             if(previewImages[i]!=null){
-                int ih=Math.min(70,(int)(previewImages[i].getHeight()*(60f/previewImages[i].getWidth())));
+                int ih=Math.min(75,(int)(previewImages[i].getHeight()*(62f/previewImages[i].getWidth())));
                 int iw=(int)(previewImages[i].getWidth()*((float)ih/previewImages[i].getHeight()));
-                g.drawImage(previewImages[i],cx+(cw-iw)/2,cy+4,iw,Math.min(ih,60),null);
+                g.drawImage(previewImages[i],cx+(cw-iw)/2,cy+4,iw,Math.min(ih,66),null);
             }
-            g.setFont(new Font("Impact",Font.PLAIN,sel?14:12)); fm=g.getFontMetrics();
-            g.setColor(sel?acc:new Color(160,160,160));
+            g.setFont(new Font("Impact",Font.PLAIN,sel?15:13)); fm=g.getFontMetrics();
+            g.setColor(sel?acc:new Color(190,190,190));
             g.drawString(NAMES[i],cx+(cw-fm.stringWidth(NAMES[i]))/2,cy+ch-8);
-            // Slot tags
             if(conf0){g.setFont(new Font("Arial",Font.BOLD,8));fm=g.getFontMetrics();
-                g.setColor(new Color(200,80,255,200));g.fillRoundRect(cx+2,cy+2,fm.stringWidth("BOT"+(slots>1?"-1":""))+6,12,3,3);
-                g.setColor(Color.BLACK);g.drawString("BOT"+(slots>1?"-1":""),cx+5,cy+11);}
+                String tag="BOT"+(slots>1?"-1":"");
+                g.setColor(new Color(210,90,255,220));g.fillRoundRect(cx+2,cy+2,fm.stringWidth(tag)+6,13,3,3);
+                g.setColor(Color.WHITE);g.drawString(tag,cx+5,cy+12);}
             if(conf1){g.setFont(new Font("Arial",Font.BOLD,8));fm=g.getFontMetrics();
-                g.setColor(new Color(200,80,255,200));g.fillRoundRect(cx+cw-fm.stringWidth("BOT-2")-8,cy+2,fm.stringWidth("BOT-2")+6,12,3,3);
-                g.setColor(Color.BLACK);g.drawString("BOT-2",cx+cw-fm.stringWidth("BOT-2")-5,cy+11);}
+                g.setColor(new Color(210,90,255,220));g.fillRoundRect(cx+cw-fm.stringWidth("BOT-2")-8,cy+2,fm.stringWidth("BOT-2")+6,13,3,3);
+                g.setColor(Color.WHITE);g.drawString("BOT-2",cx+cw-fm.stringWidth("BOT-2")-5,cy+12);}
         }
-
-        // Confirm prompt
         boolean allBotDone=true; for(boolean b:botConfirmed) if(!b) allBotDone=false;
+        int hintY=H-28;
         if(allBotDone&&difficultyDone){
             if((tick/30)%2==0){
-                g.setFont(new Font("Impact",Font.PLAIN,20)); fm=g.getFontMetrics();
-                g.setColor(new Color(200,80,255));
+                g.setFont(new Font("Impact",Font.PLAIN,22)); fm=g.getFontMetrics();
+                GradientPaint pg=new GradientPaint(0,hintY-18,new Color(255,220,50),0,hintY,new Color(255,80,0));
+                g.setPaint(pg);
                 String s="PRESS ENTER TO CONTINUE";
-                g.drawString(s,W/2-fm.stringWidth(s)/2,H-20);
+                g.drawString(s,W/2-fm.stringWidth(s)/2,hintY);
             }
         } else {
-            g.setFont(new Font("Arial",Font.BOLD,12)); fm=g.getFontMetrics();
-            g.setColor(new Color(255,255,255,70));
-            String hint=!difficultyDone?"ENTER = confirm difficulty   |   ←/→ = choose difficulty":
-                "←/→ = choose bot character   |   ENTER = confirm bot";
-            g.drawString(hint,W/2-fm.stringWidth(hint)/2,H-20);
+            g.setFont(new Font("Arial",Font.BOLD,13)); fm=g.getFontMetrics();
+            g.setColor(new Color(255,255,255,120));
+            String hint=!difficultyDone
+                ?"ENTER = confirm difficulty   |   ← / → = choose difficulty"
+                :"← / → = choose bot character   |   ENTER = confirm bot";
+            g.drawString(hint,W/2-fm.stringWidth(hint)/2,hintY);
         }
     }
 
@@ -258,43 +244,53 @@ public class CharacterSelect extends JPanel implements KeyListener, ActionListen
 
     private void drawCharacterPhase(Graphics2D g, int W, int H){
         // Title
-        g.setFont(new Font("Impact",Font.PLAIN,46));
+        g.setFont(new Font("Impact",Font.PLAIN,50));
         FontMetrics fm=g.getFontMetrics();
         String t="SELECT YOUR FIGHTER";
-        g.setColor(new Color(0,0,0,180)); g.drawString(t,W/2-fm.stringWidth(t)/2+3,63);
-        GradientPaint gp=new GradientPaint(0,25,new Color(255,220,50),0,63,new Color(255,60,0));
-        g.setPaint(gp); g.drawString(t,W/2-fm.stringWidth(t)/2,61);
+        g.setColor(new Color(0,0,0,200)); g.drawString(t,W/2-fm.stringWidth(t)/2+3,58);
+        GradientPaint gp=new GradientPaint(0,22,new Color(255,225,60),0,58,new Color(255,55,0));
+        g.setPaint(gp); g.drawString(t,W/2-fm.stringWidth(t)/2,56);
 
         drawModeTag(g,W);
 
-        // 6 cards: calculate card width to fit all in one row
-        int gap=10;
-        int cw=Math.min(200,(W-80-5*gap)/NUM_CHARS);
-        int ch=320;
-        int totalW=NUM_CHARS*cw+(NUM_CHARS-1)*gap;
-        int sx=(W-totalW)/2, sy=120;
-        for(int i=0;i<NUM_CHARS;i++) drawCharCard(g,i,sx+i*(cw+gap),sy,cw,ch);
+        // Cards fill nearly the whole screen between title and bottom panels
+        int bottomPanelH = 76;
+        int instructionH = 32;
+        int cardTopY  = 100;
+        int cardBotY  = H - bottomPanelH - instructionH - 6;
+        int ch = Math.max(220, Math.min(cardBotY - cardTopY, 600));
 
-        drawBottomPanels(g,W,H);
-        drawCharInstructions(g,W,H);
+        // Wider cards — 12px side margins, 8px gaps
+        int gap = 8;
+        int totalAvail = W - 24;
+        int cw = Math.min(260, (totalAvail - (NUM_CHARS - 1) * gap) / NUM_CHARS);
+        int totalW = NUM_CHARS * cw + (NUM_CHARS - 1) * gap;
+        int sx = (W - totalW) / 2;
+
+        for(int i=0;i<NUM_CHARS;i++) drawCharCard(g,i,sx+i*(cw+gap),cardTopY,cw,ch);
+
+        drawBottomPanels(g,W,H,bottomPanelH);
+        drawCharInstructions(g,W,H,bottomPanelH,instructionH);
     }
 
     private void drawModeTag(Graphics2D g,int W){
         String[] tags={"1V1","2V2","VS BOT","2V2 BOT"};
-        Color[]  tc  ={new Color(255,200,50),new Color(50,180,255),new Color(255,80,80),new Color(200,80,255)};
+        Color[]  tc  ={new Color(255,200,50),new Color(50,200,255),new Color(255,80,80),new Color(210,90,255)};
         String badge=tags[gameMode]; Color bc=tc[gameMode];
-        g.setFont(new Font("Arial",Font.BOLD,13)); FontMetrics fm=g.getFontMetrics();
-        int bw=fm.stringWidth(badge)+20;
-        g.setColor(new Color(bc.getRed(),bc.getGreen(),bc.getBlue(),40));
-        g.fillRoundRect(W/2-bw/2,70,bw,20,8,8);
-        g.setColor(bc); g.setStroke(new BasicStroke(1.5f));
-        g.drawRoundRect(W/2-bw/2,70,bw,20,8,8); g.setStroke(new BasicStroke(1));
-        g.drawString(badge,W/2-fm.stringWidth(badge)/2,84);
+        g.setFont(new Font("Arial",Font.BOLD,14)); FontMetrics fm=g.getFontMetrics();
+        int bw=fm.stringWidth(badge)+26, bh=24, bx=W/2-bw/2, by=64;
+        g.setColor(new Color(bc.getRed(),bc.getGreen(),bc.getBlue(),45));
+        g.fillRoundRect(bx,by,bw,bh,10,10);
+        g.setColor(new Color(bc.getRed(),bc.getGreen(),bc.getBlue(),200));
+        g.setStroke(new BasicStroke(1.5f));
+        g.drawRoundRect(bx,by,bw,bh,10,10); g.setStroke(new BasicStroke(1));
+        g.setColor(bc);
+        g.drawString(badge,W/2-fm.stringWidth(badge)/2,by+17);
         if(gameMode==2||gameMode==3){
-            g.setFont(new Font("Arial",Font.BOLD,11)); fm=g.getFontMetrics();
+            g.setFont(new Font("Arial",Font.BOLD,12)); fm=g.getFontMetrics();
             g.setColor(DIFF_COLORS[botDifficulty]);
             String ds="Difficulty: "+DIFF_NAMES[botDifficulty];
-            g.drawString(ds,W/2-fm.stringWidth(ds)/2,99);
+            g.drawString(ds,W/2-fm.stringWidth(ds)/2,96);
         }
     }
 
@@ -303,67 +299,81 @@ public class CharacterSelect extends JPanel implements KeyListener, ActionListen
         Color base=COLORS[index],acc=ACCENTS[index];
         float pulse=(float)(Math.sin(tick*0.08)*0.5+0.5);
 
-        // Special cyan tech shimmer for TechJacket
-        boolean isTJ = (index == 5);
+        // Shadow
+        g.setColor(new Color(0,0,0,110)); g.fillRoundRect(cx+4,cy+4,cw,ch,14,14);
 
-        g.setColor(new Color(0,0,0,100)); g.fillRoundRect(cx+4,cy+4,cw,ch,14,14);
-        GradientPaint bg=new GradientPaint(cx,cy,new Color(base.getRed()/6,base.getGreen()/6,base.getBlue()/6,220),cx,cy+ch,new Color(5,5,12,220));
+        // Background gradient
+        GradientPaint bg=new GradientPaint(cx,cy,
+            new Color(base.getRed()/5,base.getGreen()/5,base.getBlue()/5,230),
+            cx,cy+ch,new Color(7,7,18,230));
         g.setPaint(bg); g.fillRoundRect(cx,cy,cw,ch,14,14);
 
-        // TechJacket: draw faint circuit-line accent on card background
-        if(isTJ){
-            g.setColor(new Color(0,180,255,18));
-            g.setStroke(new BasicStroke(1));
-            for(int ly=cy+20;ly<cy+ch-10;ly+=18) g.drawLine(cx+8,ly,cx+cw-8,ly);
-            for(int lx=cx+20;lx<cx+cw-10;lx+=22) g.drawLine(lx,cy+8,lx,cy+ch-8);
-            g.setStroke(new BasicStroke(1));
+        // ── Diagonal stripes (clipped to card shape) ──────────────────────
+        Shape oldClip = g.getClip();
+        g.setClip(new RoundRectangle2D.Float(cx, cy, cw, ch, 14, 14));
+
+        // Primary diagonals: top-left → bottom-right
+        g.setColor(new Color(acc.getRed(), acc.getGreen(), acc.getBlue(), 14));
+        g.setStroke(new BasicStroke(1.2f));
+        int spacing = 22;
+        for(int d = -ch; d < cw + ch; d += spacing){
+            g.drawLine(cx + d, cy, cx + d + ch, cy + ch);
+        }
+        // Subtle counter-diagonals at half density
+        g.setColor(new Color(acc.getRed(), acc.getGreen(), acc.getBlue(), 7));
+        for(int d = -ch; d < cw + ch; d += spacing * 2){
+            g.drawLine(cx + cw - d, cy, cx + cw - d - ch, cy + ch);
         }
 
+        g.setStroke(new BasicStroke(1));
+        g.setClip(oldClip);
+        // ─────────────────────────────────────────────────────────────────
+
+        // Border
         Color bc;
-        if(p1h||p2h){int a=Math.max(0,Math.min(255,(int)(140+115*pulse)));bc=new Color(acc.getRed(),acc.getGreen(),acc.getBlue(),a);g.setStroke(new BasicStroke(3));}
-        else{bc=new Color(55,55,75);g.setStroke(new BasicStroke(1.5f));}
+        if(p1h||p2h){
+            int a=Math.max(0,Math.min(255,(int)(160+95*pulse)));
+            bc=new Color(acc.getRed(),acc.getGreen(),acc.getBlue(),a);
+            g.setStroke(new BasicStroke(3));
+        } else {
+            bc=new Color(75,75,95);
+            g.setStroke(new BasicStroke(1.5f));
+        }
         g.setColor(bc); g.drawRoundRect(cx,cy,cw,ch,14,14); g.setStroke(new BasicStroke(1));
 
-        // Preview image
-        int ph=205; float bob=(float)(Math.sin(tick*0.06+index*1.2)*5);
+        // Preview image — fills most of card height
+        int previewH = ch - 100;
+        previewH = Math.max(120, previewH);
+        float bob=(float)(Math.sin(tick*0.06+index*1.2)*5);
+
         if(previewImages[index]!=null){
             BufferedImage img=previewImages[index];
-            float scale=Math.min((float)(cw-20)/img.getWidth(),(float)ph/img.getHeight())*0.9f;
+            float scale=Math.min((float)(cw-16)/img.getWidth(),(float)(previewH)/img.getHeight())*0.92f;
             int dw=(int)(img.getWidth()*scale),dh=(int)(img.getHeight()*scale);
-            RadialGradientPaint gl=new RadialGradientPaint(cx+cw/2f,cy+ph/2f+8,ph*0.55f,new float[]{0f,1f},
-                new Color[]{new Color(base.getRed(),base.getGreen(),base.getBlue(),32),new Color(0,0,0,0)});
-            g.setPaint(gl); g.fillRect(cx,cy,cw,ph+16);
-            // TechJacket: extra cyan glow behind sprite
-            if(isTJ){
-                RadialGradientPaint techGlow=new RadialGradientPaint(cx+cw/2f,cy+ph/2f,ph*0.45f,
-                    new float[]{0f,1f},new Color[]{new Color(0,180,255,30),new Color(0,0,0,0)});
-                g.setPaint(techGlow); g.fillRect(cx,cy,cw,ph+16);
-            }
-            g.drawImage(img,cx+(cw-dw)/2,(int)(cy+8+(ph-dh)/2+bob),dw,dh,null);
-        } else if(isTJ){
-            // Fallback placeholder: draw a simple suit silhouette hint
-            g.setColor(new Color(0,120,200,80));
-            g.fillRoundRect(cx+cw/2-22,cy+30,44,140,12,12);
-            g.setColor(new Color(0,220,255,120));
-            g.fillOval(cx+cw/2-16,cy+28,32,32);
+            RadialGradientPaint gl=new RadialGradientPaint(cx+cw/2f,cy+previewH/2f+8,previewH*0.55f,
+                new float[]{0f,1f},new Color[]{new Color(base.getRed(),base.getGreen(),base.getBlue(),28),new Color(0,0,0,0)});
+            g.setPaint(gl); g.fillRect(cx,cy,cw,previewH+16);
+            g.drawImage(img,cx+(cw-dw)/2,(int)(cy+8+(previewH-dh)/2+bob),dw,dh,null);
         }
 
         // Divider
-        g.setColor(new Color(acc.getRed(),acc.getGreen(),acc.getBlue(),55));
-        g.drawLine(cx+14,cy+ph+16,cx+cw-14,cy+ph+16);
+        int divY=cy+previewH+16;
+        g.setColor(new Color(acc.getRed(),acc.getGreen(),acc.getBlue(),70));
+        g.drawLine(cx+14,divY,cx+cw-14,divY);
 
         // Name
-        g.setFont(new Font("Impact",Font.PLAIN,cw<160?16:20));
-        GradientPaint ng=new GradientPaint(cx,cy+ph+20,acc,cx,cy+ph+38,acc.darker());
+        g.setFont(new Font("Impact",Font.PLAIN,cw<160?18:22));
+        GradientPaint ng=new GradientPaint(cx,divY+4,acc,cx,divY+26,acc.darker());
         g.setPaint(ng); FontMetrics fm=g.getFontMetrics();
-        g.drawString(NAMES[index],cx+(cw-fm.stringWidth(NAMES[index]))/2,cy+ph+34);
+        g.drawString(NAMES[index],cx+(cw-fm.stringWidth(NAMES[index]))/2,divY+22);
 
         // Subtitle
-        g.setFont(new Font("Arial",Font.ITALIC,cw<160?8:10)); g.setColor(new Color(170,170,170,150)); fm=g.getFontMetrics();
-        g.drawString(SUBTITLES[index],cx+(cw-fm.stringWidth(SUBTITLES[index]))/2,cy+ph+48);
+        g.setFont(new Font("Arial",Font.ITALIC,cw<160?9:11));
+        g.setColor(new Color(195,195,195,180)); fm=g.getFontMetrics();
+        g.drawString(SUBTITLES[index],cx+(cw-fm.stringWidth(SUBTITLES[index]))/2,divY+37);
 
         // Stats
-        drawStats(g,index,cx+10,cy+ph+55,cw-20);
+        drawStats(g,index,cx+10,divY+44,cw-20);
 
         // Slot tags
         int slots=(gameMode==1||gameMode==3)?2:1;
@@ -371,13 +381,13 @@ public class CharacterSelect extends JPanel implements KeyListener, ActionListen
             if(p1Selections[s]==index&&p1Confirmed[s]){
                 g.setFont(new Font("Arial",Font.BOLD,8));fm=g.getFontMetrics();
                 String tag="P1"+(slots>1?"-"+(s+1):"");
-                g.setColor(new Color(50,150,255,200));g.fillRoundRect(cx+3+s*28,cy+3,fm.stringWidth(tag)+6,12,3,3);
-                g.setColor(Color.BLACK);g.drawString(tag,cx+6+s*28,cy+12);}
+                g.setColor(new Color(50,150,255,220));g.fillRoundRect(cx+3+s*28,cy+3,fm.stringWidth(tag)+6,13,3,3);
+                g.setColor(Color.WHITE);g.drawString(tag,cx+6+s*28,cy+13);}
             if(gameMode!=2&&gameMode!=3&&p2Selections[s]==index&&p2Confirmed[s]){
                 g.setFont(new Font("Arial",Font.BOLD,8));fm=g.getFontMetrics();
                 String tag="P2"+(slots>1?"-"+(s+1):"");
-                g.setColor(new Color(255,80,80,200));g.fillRoundRect(cx+cw-3-(s+1)*28,cy+3,fm.stringWidth(tag)+6,12,3,3);
-                g.setColor(Color.BLACK);g.drawString(tag,cx+cw-25-s*28,cy+12);}
+                g.setColor(new Color(255,80,80,220));g.fillRoundRect(cx+cw-3-(s+1)*28,cy+3,fm.stringWidth(tag)+6,13,3,3);
+                g.setColor(Color.WHITE);g.drawString(tag,cx+cw-25-s*28,cy+13);}
         }
         if(p1h) drawCursor(g,cx,cy,cw,ch,new Color(50,150,255),"P1",allP1Done());
         if(p2h) drawCursor(g,cx+3,cy+3,cw-6,ch-6,new Color(255,80,80),"P2",allP2Done());
@@ -385,75 +395,88 @@ public class CharacterSelect extends JPanel implements KeyListener, ActionListen
 
     private void drawStats(Graphics2D g,int idx,int x,int y,int w){
         String[] lbl={"PWR","SPD","HP"}; int[] vals={STAT_PWR[idx],STAT_SPD[idx],STAT_HP[idx]};
-        Color[] cols={new Color(255,60,60),new Color(60,180,255),new Color(60,200,60)};
-        g.setFont(new Font("Arial",Font.BOLD,9));
-        for(int i=0;i<3;i++){int by=y+i*11;
-            g.setColor(new Color(255,255,255,85));g.drawString(lbl[i],x,by+6);
-            int bx=x+24,bw=w-26,bh=5;
-            g.setColor(new Color(22,22,32));g.fillRoundRect(bx,by,bw,bh,bh,bh);
+        Color[] cols={new Color(255,80,80),new Color(80,190,255),new Color(80,210,80)};
+        g.setFont(new Font("Arial",Font.BOLD,10));
+        for(int i=0;i<3;i++){int by=y+i*13;
+            g.setColor(new Color(220,220,220,160)); g.drawString(lbl[i],x,by+8);
+            int bx=x+26,bw=w-28,bh=6;
+            g.setColor(new Color(28,28,42));g.fillRoundRect(bx,by,bw,bh,bh,bh);
             g.setColor(cols[i]);g.fillRoundRect(bx,by,(int)(bw*vals[i]/100f),bh,bh,bh);}
     }
 
     private void drawCursor(Graphics2D g,int cx,int cy,int cw,int ch,Color col,String label,boolean conf){
         g.setColor(conf?new Color(255,255,100):col);
         g.setStroke(new BasicStroke(3,BasicStroke.CAP_ROUND,BasicStroke.JOIN_ROUND));
-        int s=15;
+        int s=16;
         g.drawLine(cx,cy+s,cx,cy);g.drawLine(cx,cy,cx+s,cy);
         g.drawLine(cx+cw-s,cy,cx+cw,cy);g.drawLine(cx+cw,cy,cx+cw,cy+s);
         g.drawLine(cx,cy+ch-s,cx,cy+ch);g.drawLine(cx,cy+ch,cx+s,cy+ch);
         g.drawLine(cx+cw-s,cy+ch,cx+cw,cy+ch);g.drawLine(cx+cw,cy+ch,cx+cw,cy+ch-s);
         g.setStroke(new BasicStroke(1));
         g.setFont(new Font("Arial",Font.BOLD,10)); FontMetrics fm=g.getFontMetrics();
-        int lw=fm.stringWidth(label)+8;
-        g.setColor(conf?new Color(255,255,100):col); g.fillRoundRect(cx+5,cy+5,lw,14,4,4);
-        g.setColor(Color.BLACK); g.drawString(label,cx+9,cy+15);
-        if(conf){g.setFont(new Font("Impact",Font.PLAIN,13));g.setColor(new Color(255,255,100));g.drawString("LOCKED",cx+cw/2-24,cy+ch/2);}
+        int lw=fm.stringWidth(label)+10;
+        g.setColor(conf?new Color(255,255,100):col); g.fillRoundRect(cx+6,cy+6,lw,15,4,4);
+        g.setColor(Color.BLACK); g.drawString(label,cx+11,cy+17);
+        if(conf){g.setFont(new Font("Impact",Font.PLAIN,14));g.setColor(new Color(255,255,100));g.drawString("LOCKED",cx+cw/2-27,cy+ch/2);}
     }
 
-    private void drawBottomPanels(Graphics2D g,int W,int H){
+    private void drawBottomPanels(Graphics2D g,int W,int H,int panelH){
         int slots=(gameMode==1||gameMode==3)?2:1;
-        drawTeamPanel(g,20,H-85,290,65,1,slots);
-        g.setFont(new Font("Impact",Font.BOLD,34));
-        GradientPaint vg=new GradientPaint(W/2f-16,H-75,new Color(255,200,50),W/2f+16,H-40,new Color(255,50,0));
-        g.setPaint(vg); g.drawString("VS",W/2-20,H-40);
-        if(gameMode==0||gameMode==1) drawTeamPanel(g,W-310,H-85,290,65,2,slots);
-        else drawBotInfoPanel(g,W-310,H-85,290,65,slots);
+        int panelW=300, panelY=H-panelH-6;
+        drawTeamPanel(g,12,panelY,panelW,panelH,1,slots);
+        g.setFont(new Font("Impact",Font.BOLD,36));
+        GradientPaint vg=new GradientPaint(W/2f-18,H-panelH,new Color(255,210,50),W/2f+18,H-6,new Color(255,50,0));
+        g.setPaint(vg);
+        FontMetrics fm=g.getFontMetrics();
+        g.drawString("VS",W/2-fm.stringWidth("VS")/2,H-panelH/2+10);
+        if(gameMode==0||gameMode==1) drawTeamPanel(g,W-panelW-12,panelY,panelW,panelH,2,slots);
+        else drawBotInfoPanel(g,W-panelW-12,panelY,panelW,panelH,slots);
     }
 
     private void drawTeamPanel(Graphics2D g,int x,int y,int w,int h,int player,int slots){
-        Color col=player==1?new Color(50,150,255):new Color(255,80,80);
-        g.setColor(new Color(10,10,20,200));g.fillRoundRect(x,y,w,h,10,10);
-        g.setColor(allDone(player)?new Color(255,255,100):col);
-        g.setStroke(new BasicStroke(2));g.drawRoundRect(x,y,w,h,10,10);g.setStroke(new BasicStroke(1));
-        g.setFont(new Font("Impact",Font.PLAIN,14));
+        Color col=player==1?new Color(60,160,255):new Color(255,90,90);
+        boolean done=allDone(player);
+        g.setColor(new Color(8,8,18,220));g.fillRoundRect(x,y,w,h,12,12);
+        g.setColor(done?new Color(255,255,100):col);
+        g.setStroke(new BasicStroke(2));g.drawRoundRect(x,y,w,h,12,12);g.setStroke(new BasicStroke(1));
         int[] sels=player==1?p1Selections:p2Selections;
         boolean[] conf=player==1?p1Confirmed:p2Confirmed;
+        int lineH=h/slots;
+        g.setFont(new Font("Impact",Font.PLAIN,15));
         for(int s=0;s<slots;s++){
-            g.setColor(conf[s]?new Color(255,255,100):col);
-            g.drawString("P"+player+(slots>1?"-"+(s+1):"")+": "+NAMES[sels[s]]+(conf[s]?" ✓":""),x+10,y+22+s*24);}
+            g.setColor(conf[s]?new Color(255,255,120):col);
+            String line="P"+player+(slots>1?"-"+(s+1):"")+":  "+NAMES[sels[s]]+(conf[s]?"  ✓":"");
+            g.drawString(line,x+12,y+lineH/2+s*lineH+6);}
     }
 
     private void drawBotInfoPanel(Graphics2D g,int x,int y,int w,int h,int slots){
-        g.setColor(new Color(10,10,20,200));g.fillRoundRect(x,y,w,h,10,10);
-        g.setColor(DIFF_COLORS[botDifficulty]);g.setStroke(new BasicStroke(2));
-        g.drawRoundRect(x,y,w,h,10,10);g.setStroke(new BasicStroke(1));
-        g.setFont(new Font("Impact",Font.PLAIN,13));
+        g.setColor(new Color(8,8,18,220));g.fillRoundRect(x,y,w,h,12,12);
+        Color dc=DIFF_COLORS[botDifficulty];
+        g.setColor(dc);g.setStroke(new BasicStroke(2));
+        g.drawRoundRect(x,y,w,h,12,12);g.setStroke(new BasicStroke(1));
+        g.setFont(new Font("Impact",Font.PLAIN,14));
+        int lineH=h/slots;
         for(int s=0;s<slots;s++){
-            g.setColor(DIFF_COLORS[botDifficulty]);
-            g.drawString("BOT"+(slots>1?"-"+(s+1):"")+": "+NAMES[botSelections[s]]+" ["+DIFF_NAMES[botDifficulty]+"]",x+8,y+20+s*24);}
+            g.setColor(dc);
+            g.drawString("BOT"+(slots>1?"-"+(s+1):"")+":  "+NAMES[botSelections[s]]+" ["+DIFF_NAMES[botDifficulty]+"]",x+10,y+lineH/2+s*lineH+6);}
     }
 
-    private void drawCharInstructions(Graphics2D g,int W,int H){
-        g.setFont(new Font("Arial",Font.PLAIN,11)); g.setColor(new Color(255,255,255,65));
+    private void drawCharInstructions(Graphics2D g,int W,int H,int panelH,int instructionH){
+        int instrY=H-panelH-instructionH+12;
+        g.setFont(new Font("Arial",Font.BOLD,12));
+        g.setColor(new Color(255,255,255,100));
         FontMetrics fm=g.getFontMetrics();
-        String i1="P1: A/D select  |  F confirm";
-        String i2=(gameMode==0||gameMode==1)?"P2: ←/→ select  |  NP1 confirm":"Bot auto-assigned";
-        g.drawString(i1,20,H-92); g.drawString(i2,W-220,H-92);
+        String i1="P1: A / D  =  move   |   F  =  confirm";
+        String i2=(gameMode==0||gameMode==1)?"P2: ← / →  =  move   |   NP1  =  confirm":"Bot auto-assigned";
+        g.drawString(i1,22,instrY);
+        g.drawString(i2,W-fm.stringWidth(i2)-22,instrY);
         boolean rd=allP1Done()&&(gameMode==2||gameMode==3||allP2Done());
         if(rd&&(tick/30)%2==0){
-            g.setFont(new Font("Impact",Font.PLAIN,20));g.setColor(new Color(255,220,50));
-            String s="PRESS ENTER TO FIGHT!";fm=g.getFontMetrics();
-            g.drawString(s,W/2-fm.stringWidth(s)/2,H-12);}
+            g.setFont(new Font("Impact",Font.PLAIN,22)); fm=g.getFontMetrics();
+            GradientPaint pg=new GradientPaint(0,instrY+2,new Color(255,220,50),0,instrY+24,new Color(255,80,0));
+            g.setPaint(pg);
+            String s="PRESS ENTER TO FIGHT!";
+            g.drawString(s,W/2-fm.stringWidth(s)/2,instrY+20);}
     }
 
     private boolean allP1Done(){for(boolean b:p1Confirmed)if(!b)return false;return true;}
@@ -465,7 +488,6 @@ public class CharacterSelect extends JPanel implements KeyListener, ActionListen
     public void keyPressed(KeyEvent e){
         int code=e.getKeyCode();
         int slots=(gameMode==1||gameMode==3)?2:1;
-
         if(phase==0){
             if(!difficultyDone){
                 if(code==KeyEvent.VK_A||code==KeyEvent.VK_LEFT)  botDifficulty=(botDifficulty+3)%4;
@@ -479,9 +501,7 @@ public class CharacterSelect extends JPanel implements KeyListener, ActionListen
                     botConfirmed[botSlot]=true;
                     if(botSlot<slots-1) botSlot++;
                 }
-            } else if(code==KeyEvent.VK_ENTER||code==KeyEvent.VK_F){
-                phase=1;
-            }
+            } else if(code==KeyEvent.VK_ENTER||code==KeyEvent.VK_F){ phase=1; }
         } else {
             if(!p1Confirmed[p1Slot]){
                 if(code==KeyEvent.VK_A) p1Cursor=(p1Cursor+NUM_CHARS-1)%NUM_CHARS;
@@ -498,7 +518,7 @@ public class CharacterSelect extends JPanel implements KeyListener, ActionListen
         }
         repaint();
     }
-    
+
     @Override public void keyReleased(KeyEvent e){}
     @Override public void keyTyped(KeyEvent e){}
 
