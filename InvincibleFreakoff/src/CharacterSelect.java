@@ -133,15 +133,17 @@ public class CharacterSelect extends JPanel implements KeyListener, ActionListen
 
     private void drawDifficultyPhase(Graphics2D g, int W, int H) {
         botDifficulty = Math.min(3, Math.max(0, botDifficulty));
+        
+        // Header Title
         g.setFont(new Font("Impact", Font.PLAIN, 52));
         FontMetrics fm = g.getFontMetrics();
         String t = "SELECT DIFFICULTY";
         g.setColor(new Color(0, 0, 0, 200));
         g.drawString(t, W / 2 - fm.stringWidth(t) / 2 + 3, 68);
-        GradientPaint gp = new GradientPaint(0, 28, new Color(255, 225, 60), 0, 68, new Color(255, 55, 0));
-        g.setPaint(gp);
+        g.setPaint(new GradientPaint(0, 28, new Color(255, 225, 60), 0, 68, new Color(255, 55, 0)));
         g.drawString(t, W / 2 - fm.stringWidth(t) / 2, 66);
 
+        // Sub-badge
         String badge = gameMode == 2 ? "1 VS BOT" : "2 VS 2 BOT";
         g.setFont(new Font("Arial", Font.BOLD, 14));
         fm = g.getFontMetrics();
@@ -151,167 +153,214 @@ public class CharacterSelect extends JPanel implements KeyListener, ActionListen
         g.setColor(new Color(200, 100, 255, 200));
         g.setStroke(new BasicStroke(1.5f));
         g.drawRoundRect(bx, by, bw, bh, 10, 10);
-        g.setStroke(new BasicStroke(1));
         g.setColor(new Color(230, 180, 255));
         g.drawString(badge, W / 2 - fm.stringWidth(badge) / 2, by + 16);
 
-        g.setFont(new Font("Arial", Font.BOLD, 13));
-        fm = g.getFontMetrics();
-        g.setColor(new Color(255, 255, 255, 120));
-        String nav = "← → or A/D to select   |   ENTER or F to confirm";
-        g.drawString(nav, W / 2 - fm.stringWidth(nav) / 2, 117);
+        // --- FULL WIDTH FLAT RECTANGLES ---
+        int gap = 20; 
+        int margin = 60; 
+        int totalAvail = W - margin;
+        // Width is now simple division (no slant to account for)
+        int cw = (totalAvail - (3 * gap)) / 4; 
+        int ch = 150; 
+        int totalW = (4 * cw) + (3 * gap);
+        int sx = (W - totalW) / 2;
+        int sy = 120;
 
-        int cw = 248, ch = 172, gap = 32, totalW = 4 * cw + 3 * gap, sx = (W - totalW) / 2, sy = 136;
-        for (int i = 0; i < 4; i++) drawDiffCard(g, i, sx + i * (cw + gap), sy, cw, ch);
+        for (int i = 0; i < 4; i++) {
+            drawDiffCard(g, i, sx + i * (cw + gap), sy, cw, ch);
+        }
 
-        g.setFont(new Font("Arial", Font.ITALIC, 15));
+        // Difficulty Description
+        g.setFont(new Font("Arial", Font.ITALIC, 16));
         fm = g.getFontMetrics();
-        g.setColor(new Color(240, 240, 240, 210));
+        g.setColor(new Color(240, 240, 240, 220));
         String desc = DIFF_DESC[botDifficulty];
-        g.drawString(desc, W / 2 - fm.stringWidth(desc) / 2, sy + ch + 42);
-        drawBotCharSelect(g, W, sy + ch + 62, H);
+        g.drawString(desc, W / 2 - fm.stringWidth(desc) / 2, sy + ch + 40);
+
+        // Bot characters remain slanted below
+        drawBotCharSelect(g, W, sy + ch + 60, H);
     }
 
     private void drawDiffCard(Graphics2D g, int index, int cx, int cy, int cw, int ch) {
         boolean sel = (index == botDifficulty);
         Color col = DIFF_COLORS[index];
         float pulse = (float) (Math.sin(tick * 0.08) * 0.5 + 0.5);
-        g.setColor(new Color(0, 0, 0, 120));
-        g.fillRoundRect(cx + 4, cy + 4, cw, ch, 14, 14);
+
+        // Standard Rounded Rect Shadow
+        g.setColor(new Color(0, 0, 0, 100));
+        g.fillRoundRect(cx + 4, cy + 4, cw, ch, 15, 15);
+
+        // Background
         GradientPaint bg = new GradientPaint(cx, cy,
-                new Color(col.getRed() / 6, col.getGreen() / 6, col.getBlue() / 6, 230),
-                cx, cy + ch, new Color(6, 6, 16, 230));
+                new Color(col.getRed() / 5, col.getGreen() / 5, col.getBlue() / 5, 230),
+                cx, cy + ch, new Color(10, 10, 20, 255));
         g.setPaint(bg);
-        g.fillRoundRect(cx, cy, cw, ch, 14, 14);
+        g.fillRoundRect(cx, cy, cw, ch, 15, 15);
+
+        // Border
         if (sel) {
-            int a = Math.max(0, Math.min(255, (int) (150 + 105 * pulse)));
+            int a = Math.max(0, Math.min(255, (int) (180 + 75 * pulse)));
             g.setColor(new Color(col.getRed(), col.getGreen(), col.getBlue(), a));
-            g.setStroke(new BasicStroke(3));
+            g.setStroke(new BasicStroke(4));
         } else {
-            g.setColor(new Color(70, 70, 90, 200));
+            g.setColor(new Color(70, 70, 90, 180));
             g.setStroke(new BasicStroke(1.5f));
         }
-        g.drawRoundRect(cx, cy, cw, ch, 14, 14);
+        g.drawRoundRect(cx, cy, cw, ch, 15, 15);
         g.setStroke(new BasicStroke(1));
+
+        // Center Alignments (Standard, no slant math needed)
+        int centerX = cx + cw / 2;
+
+        // Icon
         String[] icons = {"😊", "⚔", "🔥", "💀"};
-        g.setFont(new Font("Segoe UI Emoji", Font.PLAIN, sel ? 36 : 28));
+        g.setFont(new Font("Segoe UI Emoji", Font.PLAIN, sel ? 48 : 38));
         FontMetrics fm = g.getFontMetrics();
         g.setColor(col);
-        g.drawString(icons[index], cx + (cw - fm.stringWidth(icons[index])) / 2, cy + 50);
-        g.setFont(new Font("Impact", Font.PLAIN, sel ? 30 : 24));
+        g.drawString(icons[index], centerX - fm.stringWidth(icons[index]) / 2, cy + 65);
+
+        // Name
+        g.setFont(new Font("Impact", Font.PLAIN, sel ? 34 : 28));
         fm = g.getFontMetrics();
         if (sel) {
-            GradientPaint tp = new GradientPaint(cx, cy + 56, col, cx, cy + 88, col.darker());
-            g.setPaint(tp);
-        } else g.setColor(new Color(180, 180, 180));
-        g.drawString(DIFF_NAMES[index], cx + (cw - fm.stringWidth(DIFF_NAMES[index])) / 2, cy + 88);
+            g.setPaint(new GradientPaint(cx, cy + 85, col, cx, cy + 115, col.darker()));
+        } else {
+            g.setColor(new Color(180, 180, 180));
+        }
+        g.drawString(DIFF_NAMES[index], centerX - fm.stringWidth(DIFF_NAMES[index]) / 2, cy + 110);
+
+        // Selected indicator
         if (sel) {
-            g.setFont(new Font("Arial", Font.BOLD, 11));
+            g.setFont(new Font("Arial", Font.BOLD, 12));
             fm = g.getFontMetrics();
-            g.setColor(new Color(col.getRed(), col.getGreen(), col.getBlue(), 200));
-            g.drawString("SELECTED", cx + (cw - fm.stringWidth("SELECTED")) / 2, cy + 108);
             g.setColor(col);
-            g.fillPolygon(new int[]{cx + cw / 2 - 8, cx + cw / 2 + 8, cx + cw / 2}, new int[]{cy + ch + 7, cy + ch + 7, cy + ch + 16}, 3);
+            g.drawString("SELECTED", centerX - fm.stringWidth("SELECTED") / 2, cy + 135);
+            
+            // Triangle pointer
+            g.fillPolygon(new int[]{centerX - 10, centerX + 10, centerX}, 
+                          new int[]{cy + ch + 5, cy + ch + 5, cy + ch + 15}, 3);
         }
     }
 
     private void drawBotCharSelect(Graphics2D g, int W, int y, int H) {
         int slots = (gameMode == 3) ? 2 : 1;
-        g.setFont(new Font("Impact", Font.PLAIN, 24));
-        FontMetrics fm = g.getFontMetrics();
-        g.setColor(new Color(255, 255, 255, 200));
-        String hdr = "SELECT BOT CHARACTER" + (slots > 1 ? "S" : "");
-        g.drawString(hdr, W / 2 - fm.stringWidth(hdr) / 2, y + 26);
         
-        int cw = 170, ch = 100, gap = 14, slant = 45; // Increased slant
-        int totalW = NUM_CHARS * cw + slant + (NUM_CHARS - 1) * gap;
+        // Header
+        g.setFont(new Font("Impact", Font.PLAIN, 28));
+        FontMetrics fm = g.getFontMetrics();
+        g.setColor(new Color(255, 255, 255, 220));
+        String hdr = "SELECT BOT CHARACTER" + (slots > 1 ? "S" : "");
+        g.drawString(hdr, W / 2 - fm.stringWidth(hdr) / 2, y + 15);
+        
+        // --- DYNAMIC WIDTH & HEIGHT FOR BOT CARDS ---
+        int gap = 12; 
+        int slant = 110;          // Aggressive slant
+        int sideMargin = 40;      // Space on the far left/right
+        int totalAvail = W - sideMargin;
+        
+        // Calculate width so 6 cards + 1 slant fill the available space
+        int cw = (totalAvail - slant - ((NUM_CHARS - 1) * gap)) / NUM_CHARS;
+        
+        // Calculate height to fill from the description text to the bottom hint area
+        int ch = H - y - 100; 
+        int cy = y + 35;
+
+        // Center the whole group
+        int totalW = (NUM_CHARS * cw) + slant + ((NUM_CHARS - 1) * gap);
         int sx = (W - totalW) / 2;
 
         for (int i = 0; i < NUM_CHARS; i++) {
-            int cx = sx + i * (cw + gap), cy = y + 36;
+            int cx = sx + i * (cw + gap);
             boolean sel = (botCursor == i);
             boolean conf0 = (slots >= 1 && botSelections[0] == i && botConfirmed[0]);
             boolean conf1 = (slots >= 2 && botSelections[1] == i && botConfirmed[1]);
             Color col = COLORS[i], acc = ACCENTS[i];
             float pulse = (float) (Math.sin(tick * 0.08) * 0.5 + 0.5);
 
+            // Parallelogram Shape
             int[] px = {cx + slant, cx + cw + slant, cx + cw, cx};
             int[] py = {cy, cy, cy + ch, cy + ch};
             Polygon cardPoly = new Polygon(px, py, 4);
 
-            g.setColor(new Color(0, 0, 0, 100));
-            g.translate(3, 3);
-            g.fillPolygon(cardPoly);
-            g.translate(-3, -3);
-
+            // Card Background
             GradientPaint bg = new GradientPaint(cx, cy,
-                    new Color(col.getRed() / 5, col.getGreen() / 5, col.getBlue() / 5, 220),
-                    cx, cy + ch, new Color(6, 6, 16, 220));
+                    new Color(col.getRed() / 5, col.getGreen() / 5, col.getBlue() / 5, 230),
+                    cx, cy + ch, new Color(5, 5, 12, 250));
             g.setPaint(bg);
             g.fillPolygon(cardPoly);
 
-            int borderAlpha = sel ? Math.max(0, Math.min(255, (int) (145 + 110 * pulse))) : 80;
-            g.setColor(sel ? new Color(acc.getRed(), acc.getGreen(), acc.getBlue(), borderAlpha) : new Color(70, 70, 90, 180));
-            g.setStroke(new BasicStroke(sel ? 2.5f : 1.2f));
+            // Highlight Border
+            if (sel) {
+                int a = Math.max(0, Math.min(255, (int) (160 + 95 * pulse)));
+                g.setColor(new Color(acc.getRed(), acc.getGreen(), acc.getBlue(), a));
+                g.setStroke(new BasicStroke(3.5f));
+            } else {
+                g.setColor(new Color(70, 70, 90, 140));
+                g.setStroke(new BasicStroke(1.5f));
+            }
             g.drawPolygon(cardPoly);
             g.setStroke(new BasicStroke(1));
 
+            // Character Preview (Vertical Scaling)
             if (previewImages[i] != null) {
-                int ih = Math.min(75, (int) (previewImages[i].getHeight() * (62f / previewImages[i].getWidth())));
-                int iw = (int) (previewImages[i].getWidth() * ((float) ih / previewImages[i].getHeight()));
+                BufferedImage img = previewImages[i];
+                // Scale image to fit the new wider/taller card
+                float scale = Math.min((float) (cw + 20) / img.getWidth(), (float) (ch * 0.65) / img.getHeight());
+                int dw = (int) (img.getWidth() * scale);
+                int dh = (int) (img.getHeight() * scale);
                 
-                float tY = (float) (cy + 4 + ih / 2f - cy) / ch;
+                // Centering math inside the slant
+                int imgY = cy + 25;
+                float tY = (float) (imgY + dh / 2 - cy) / ch;
                 int imgCenter = (int) (cx + cw / 2.0 + slant * (1.0 - tY));
-                g.drawImage(previewImages[i], imgCenter - iw / 2, cy + 4, iw, Math.min(ih, 66), null);
+                
+                g.drawImage(img, imgCenter - dw / 2, imgY, dw, dh, null);
             }
 
-            g.setFont(new Font("Impact", Font.PLAIN, sel ? 15 : 13));
+            // Character Name (Anchored near bottom)
+            g.setFont(new Font("Impact", Font.PLAIN, 18));
             fm = g.getFontMetrics();
-            g.setColor(sel ? acc : new Color(190, 190, 190));
-            int textY = cy + ch - 8;
+            int textY = cy + ch - 20;
             float textT = (float) (textY - cy) / ch;
             int textCenter = (int) (cx + cw / 2.0 + slant * (1.0 - textT));
+            
+            g.setColor(sel ? acc : new Color(180, 180, 180));
             g.drawString(NAMES[i], textCenter - fm.stringWidth(NAMES[i]) / 2, textY);
 
-            if (conf0) {
-                g.setFont(new Font("Arial", Font.BOLD, 8));
+            // Bot Indicators
+            if (conf0 || conf1) {
+                String tag = (conf0 && conf1) ? "BOT 1&2" : (conf0 ? "BOT-1" : "BOT-2");
+                g.setFont(new Font("Arial", Font.BOLD, 10));
                 fm = g.getFontMetrics();
-                String tag = "BOT" + (slots > 1 ? "-1" : "");
-                g.setColor(new Color(210, 90, 255, 220));
-                g.fillRoundRect(cx + slant + 2, cy + 2, fm.stringWidth(tag) + 6, 13, 3, 3);
+                
+                int tagY = cy + 15;
+                float tagT = (float)(tagY - cy) / ch;
+                int tagX = (int)(cx + cw/2.0 + slant * (1.0 - tagT));
+                
+                g.setColor(new Color(210, 90, 255));
+                g.fillRoundRect(tagX - 25, cy + 5, 50, 16, 5, 5);
                 g.setColor(Color.WHITE);
-                g.drawString(tag, cx + slant + 5, cy + 12);
-            }
-            if (conf1) {
-                g.setFont(new Font("Arial", Font.BOLD, 8));
-                fm = g.getFontMetrics();
-                g.setColor(new Color(210, 90, 255, 220));
-                g.fillRoundRect(cx + cw + slant - fm.stringWidth("BOT-2") - 8, cy + 2, fm.stringWidth("BOT-2") + 6, 13, 3, 3);
-                g.setColor(Color.WHITE);
-                g.drawString("BOT-2", cx + cw + slant - fm.stringWidth("BOT-2") - 5, cy + 12);
+                g.drawString(tag, tagX - fm.stringWidth(tag)/2, cy + 17);
             }
         }
 
+        // --- HINT AREA ---
         boolean allBotDone = true;
         for (boolean b : botConfirmed) if (!b) allBotDone = false;
-        int hintY = H - 28;
+        int hintY = H - 35;
         
+        g.setFont(new Font("Arial", Font.BOLD, 14));
+        fm = g.getFontMetrics();
         if (allBotDone && difficultyDone) {
             if ((tick / 30) % 2 == 0) {
-                g.setFont(new Font("Impact", Font.PLAIN, 22));
-                fm = g.getFontMetrics();
-                GradientPaint pg = new GradientPaint(0, hintY - 18, new Color(255, 220, 50), 0, hintY, new Color(255, 80, 0));
-                g.setPaint(pg);
+                g.setColor(new Color(255, 200, 0));
                 String s = "PRESS ENTER TO CONTINUE";
                 g.drawString(s, W / 2 - fm.stringWidth(s) / 2, hintY);
             }
         } else {
-            g.setFont(new Font("Arial", Font.BOLD, 13));
-            fm = g.getFontMetrics();
-            g.setColor(new Color(255, 255, 255, 120));
-            String hint = !difficultyDone
-                    ? "ENTER = confirm difficulty   |   ← / → = choose difficulty"
-                    : "← / → = choose bot character   |   ENTER = confirm bot";
+            g.setColor(new Color(255, 255, 255, 100));
+            String hint = !difficultyDone ? "CONFIRM DIFFICULTY FIRST" : "A / D to select Bot Character  |  F to Confirm";
             g.drawString(hint, W / 2 - fm.stringWidth(hint) / 2, hintY);
         }
     }
