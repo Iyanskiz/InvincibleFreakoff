@@ -1,6 +1,6 @@
 # 👊 Invincible: 2D Java Fighting Engine 📝
 
-A high-octane, custom-built 2D fighting game engine developed in Java. Experience intense local 1v1 combat featuring the powerhouse characters of the *Invincible* universe.
+A high-octane, custom-built 2D fighting game engine developed in Java. Experience intense local 1v1 combat featuring the powerhouse characters of the *Invincible* universe. 
 
 ## 🕹️ Overview
 This engine utilizes a specialized sprite-based animation system, dynamic environmental hazards, and a robust character selection UI. It is designed to handle custom physics, gravity, and frame-perfect collision detection.
